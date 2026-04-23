@@ -1,10 +1,19 @@
 import { User, Mail, Phone, Calendar, Settings, History, Wallet, LogOut } from 'lucide-react';
+import { useAuth } from '../context';
+import { useNavigate } from 'react-router-dom';
 
-interface ProfilePageProps {
-  onNavigate: (page: string) => void;
-}
+export function ProfilePage() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-export function ProfilePage({ onNavigate }: ProfilePageProps) {
+  const handleNavigate = (page: string) => {
+    navigate(`/${page}`);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
   return (
     <div className="container mx-auto px-4 py-6">
       <h2 className="mb-6">Mój profil</h2>
@@ -16,33 +25,36 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
               <div className="w-24 h-24 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center text-white mb-4">
                 <User className="w-12 h-12" />
               </div>
-              <h3 className="mb-1">Jan Kowalski</h3>
-              <p className="text-sm text-muted-foreground">ID: #12345678</p>
+              <h3 className="mb-1">{user?.name || 'Użytkownik'}</h3>
+              <p className="text-sm text-muted-foreground">ID: {user?.id || '#00000000'}</p>
             </div>
 
             <div className="space-y-3">
               <button
-                onClick={() => onNavigate('settings')}
+                onClick={() => handleNavigate('settings')}
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
               >
                 <Settings className="w-5 h-5 text-muted-foreground" />
                 <span>Ustawienia konta</span>
               </button>
               <button
-                onClick={() => onNavigate('history')}
+                onClick={() => handleNavigate('history')}
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
               >
                 <History className="w-5 h-5 text-muted-foreground" />
                 <span>Historia zakładów</span>
               </button>
               <button
-                onClick={() => onNavigate('wallet')}
+                onClick={() => handleNavigate('wallet')}
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
               >
                 <Wallet className="w-5 h-5 text-muted-foreground" />
                 <span>Portfel</span>
               </button>
-              <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 text-destructive transition text-left">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 text-destructive transition text-left"
+              >
                 <LogOut className="w-5 h-5" />
                 <span>Wyloguj się</span>
               </button>
@@ -59,7 +71,7 @@ export function ProfilePage({ onNavigate }: ProfilePageProps) {
                 <Mail className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
                   <div className="text-sm text-muted-foreground">Email</div>
-                  <div>jan.kowalski@example.com</div>
+                  <div>{user?.email || 'brak@email.com'}</div>
                 </div>
               </div>
 

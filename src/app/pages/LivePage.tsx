@@ -1,13 +1,7 @@
 import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { Radio } from 'lucide-react';
-
-interface Bet {
-  team: string;
-  odd: number;
-  match: string;
-  id: string;
-}
+import { useBetting } from '../context';
 
 const liveMatches = [
   {
@@ -48,14 +42,8 @@ const liveMatches = [
   },
 ];
 
-interface LivePageProps {
-  bets: Bet[];
-  onAddToBet: (team: string, odd: number, match: string) => void;
-  onRemoveBet: (id: string) => void;
-  onClearAll: () => void;
-}
-
-export function LivePage({ bets, onAddToBet, onRemoveBet, onClearAll }: LivePageProps) {
+export function LivePage() {
+  const { bets, addBet, removeBet, clearAllBets } = useBetting();
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -78,7 +66,7 @@ export function LivePage({ bets, onAddToBet, onRemoveBet, onClearAll }: LivePage
                 time={match.time}
                 odds={match.odds}
                 isLive={match.isLive}
-                onAddToBet={onAddToBet}
+                onAddToBet={addBet}
               />
             ))}
           </div>
@@ -87,8 +75,8 @@ export function LivePage({ bets, onAddToBet, onRemoveBet, onClearAll }: LivePage
         <div>
           <BettingSlip
             bets={bets}
-            onRemoveBet={onRemoveBet}
-            onClearAll={onClearAll}
+            onRemoveBet={removeBet}
+            onClearAll={clearAllBets}
           />
         </div>
       </div>

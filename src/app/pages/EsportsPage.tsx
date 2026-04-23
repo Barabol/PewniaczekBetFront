@@ -1,13 +1,7 @@
 import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { Gamepad2 } from 'lucide-react';
-
-interface Bet {
-  team: string;
-  odd: number;
-  match: string;
-  id: string;
-}
+import { useBetting } from '../context';
 
 const esportsMatches = [
   {
@@ -48,14 +42,8 @@ const esportsMatches = [
   },
 ];
 
-interface EsportsPageProps {
-  bets: Bet[];
-  onAddToBet: (team: string, odd: number, match: string) => void;
-  onRemoveBet: (id: string) => void;
-  onClearAll: () => void;
-}
-
-export function EsportsPage({ bets, onAddToBet, onRemoveBet, onClearAll }: EsportsPageProps) {
+export function EsportsPage() {
+  const { bets, addBet, removeBet, clearAllBets } = useBetting();
   const games = [
     { name: 'CS:GO', matches: 45 },
     { name: 'League of Legends', matches: 67 },
@@ -105,7 +93,7 @@ export function EsportsPage({ bets, onAddToBet, onRemoveBet, onClearAll }: Espor
                 time={match.time}
                 odds={match.odds}
                 isLive={match.isLive}
-                onAddToBet={onAddToBet}
+                onAddToBet={addBet}
               />
             ))}
           </div>
@@ -114,8 +102,8 @@ export function EsportsPage({ bets, onAddToBet, onRemoveBet, onClearAll }: Espor
         <div>
           <BettingSlip
             bets={bets}
-            onRemoveBet={onRemoveBet}
-            onClearAll={onClearAll}
+            onRemoveBet={removeBet}
+            onClearAll={clearAllBets}
           />
         </div>
       </div>

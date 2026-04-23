@@ -1,15 +1,8 @@
-import { useState } from 'react';
 import { SportCategories } from '../components/SportCategories';
 import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { Flame, Star } from 'lucide-react';
-
-interface Bet {
-  team: string;
-  odd: number;
-  match: string;
-  id: string;
-}
+import { useBetting } from '../context';
 
 const mockMatches = [
   {
@@ -68,14 +61,8 @@ const mockMatches = [
   },
 ];
 
-interface HomePageProps {
-  bets: Bet[];
-  onAddToBet: (team: string, odd: number, match: string) => void;
-  onRemoveBet: (id: string) => void;
-  onClearAll: () => void;
-}
-
-export function HomePage({ bets, onAddToBet, onRemoveBet, onClearAll }: HomePageProps) {
+export function HomePage() {
+  const { bets, addBet, removeBet, clearAllBets } = useBetting();
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
@@ -107,7 +94,7 @@ export function HomePage({ bets, onAddToBet, onRemoveBet, onClearAll }: HomePage
                   time={match.time}
                   odds={match.odds}
                   isLive={match.isLive}
-                  onAddToBet={onAddToBet}
+                  onAddToBet={addBet}
                 />
               ))}
             </div>
@@ -117,8 +104,8 @@ export function HomePage({ bets, onAddToBet, onRemoveBet, onClearAll }: HomePage
         <div>
           <BettingSlip
             bets={bets}
-            onRemoveBet={onRemoveBet}
-            onClearAll={onClearAll}
+            onRemoveBet={removeBet}
+            onClearAll={clearAllBets}
           />
         </div>
       </div>

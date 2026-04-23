@@ -1,17 +1,18 @@
 import { Trophy, Mail, Lock } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../context';
+import { useNavigate } from 'react-router-dom';
 
-interface LoginPageProps {
-  onLogin: () => void;
-}
-
-export function LoginPage({ onLogin }: LoginPageProps) {
+export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    await login(email, password);
+    navigate('/');
   };
 
   return (
