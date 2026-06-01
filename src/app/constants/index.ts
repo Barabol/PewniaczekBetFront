@@ -100,29 +100,45 @@ export const VALIDATION_MESSAGES = {
   BALANCE_INSUFFICIENT: 'Niewystarczające środki na koncie',
 } as const;
 
-// API Endpoints (Future)
+// API Endpoints
 export const API_ENDPOINTS = {
-  BASE_URL: process.env.VITE_API_URL || 'https://api.pewniaczekbet.pl',
-  AUTH: {
-    LOGIN: '/auth/login',
-    REGISTER: '/auth/register',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-  },
-  MATCHES: {
-    LIST: '/matches',
-    LIVE: '/matches/live',
-    DETAILS: (id: number) => `/matches/${id}`,
-  },
-  BETS: {
-    PLACE: '/bets',
-    HISTORY: '/bets/history',
-    CANCEL: (id: number) => `/bets/${id}/cancel`,
-  },
+  BASE_URL: 'http://172.21.225.41:8080',
   USER: {
-    PROFILE: '/user/profile',
-    BALANCE: '/user/balance',
-    STATISTICS: '/user/statistics',
+    LOGIN: '/api/user/login',
+    REGISTER: '/api/user/register',
+    LOGOUT: '/api/user/logout',
+    DETAILS: '/api/user/details',
+    ALL: '/api/user/all',
+    TOGGLE_VISIBILITY: '/api/user/toggleVisibility',
+    FOLLOW: '/api/user/follow',
+    UNFOLLOW: '/api/user/follow',
+    FOLLOWERS: '/api/user/followers',
+    FOLLOWED: '/api/user/followed',
+  },
+  BET: {
+    WIN_PLACE: '/api/bet/win/place',
+    WIN_ADD: '/api/bet/win/add',
+    WIN_CURRENT: '/api/bet/win/curent',
+    WIN_ALL: '/api/bet/win/all',
+    SCORE_PLACE: '/api/bet/score/place',
+    SCORE_ADD: '/api/bet/score/add',
+    SCORE_CURRENT: '/api/bet/score/curent',
+    SCORE_ALL: '/api/bet/score/all',
+    PREDICTION_PLACE: '/api/bet/prediction/place',
+    PREDICTION_ADD: '/api/bet/prediction/add',
+    PREDICTION_CURRENT: '/api/bet/prediction/curent',
+    PREDICTION_ALL: '/api/bet/prediction/all',
+  },
+  PAYMENT: {
+    SEND: '/pay/send',
+    RELOAD_ALL: '/pay/reload_all',
+    REDIRECT: '/pay/redirect',
+  },
+  OATH: {
+    GITHUB_INITIATE: '/social/github/initiate',
+    GITHUB_CALLBACK: '/social/github/callback',
+    GITHUB_DELETE: '/social/github',
+    ALL: '/social/all',
   },
 } as const;
 

@@ -1,19 +1,29 @@
 import { ArrowDownCircle, ArrowUpCircle, CreditCard, Landmark } from 'lucide-react';
 import { useState } from 'react';
-
-const transactions = [
-  { id: 1, type: 'deposit', amount: 200, method: 'Karta kredytowa', date: '2026-04-19 14:30' },
-  { id: 2, type: 'bet', amount: -50, method: 'Zakład #12345', date: '2026-04-19 18:30' },
-  { id: 3, type: 'win', amount: 92.50, method: 'Wygrana #12345', date: '2026-04-19 20:45' },
-  { id: 4, type: 'bet', amount: -100, method: 'Zakład #12346', date: '2026-04-18 21:00' },
-  { id: 5, type: 'deposit', amount: 500, method: 'Przelew bankowy', date: '2026-04-17 10:15' },
-];
+import { useAuth } from '../context';
+import { paymentService } from '../services';
+import { toast } from 'sonner';
 
 export function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
+  const { user, refreshUser } = useAuth();
 
-  const balance = 1234.50;
+  const handlePayment = async () => {
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Podaj prawidłową kwotę');
+      return;
+    }
+    try {
+      const result = await paymentService.send(Math.round(amountNum));
+      await refreshUser();
+      toast.success('Płatność została zrealizowana');
+      setAmount('');
+    } catch {
+      toast.error('Nie udało się zrealizować płatności');
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -23,15 +33,15 @@ export function WalletPage() {
         <div className="lg:col-span-1">
           <div className="bg-gradient-to-br from-green-600 to-green-700 text-white rounded-lg shadow-lg p-6 mb-6">
             <div className="text-sm opacity-80 mb-2">Dostępne środki</div>
-            <div className="text-3xl font-bold mb-4">{balance.toFixed(2)} PLN</div>
+            <div className="text-3xl font-bold mb-4">{user?.balance?.toFixed(2) || '0.00'} PLN</div>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
-                <div className="opacity-80">Zablokowane</div>
-                <div className="font-medium">125.00 PLN</div>
+                <div className="opacity-80">Freebet</div>
+                <div className="font-medium">{user?.freeBetBalance?.toFixed(2) || '0.00'} PLN</div>
               </div>
               <div>
-                <div className="opacity-80">Bonus</div>
-                <div className="font-medium">50.00 PLN</div>
+                <div className="opacity-80">Stan konta</div>
+                <div className="font-medium">{user?.accountTypeId === 1 ? 'Premium' : 'Standard'}</div>
               </div>
             </div>
           </div>
@@ -87,7 +97,10 @@ export function WalletPage() {
                 </div>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium">
+              <button
+                onClick={handlePayment}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium"
+              >
                 {activeTab === 'deposit' ? 'Wpłać środki' : 'Wypłać środki'}
               </button>
 
@@ -103,47 +116,24 @@ export function WalletPage() {
         <div className="lg:col-span-2">
           <div className="bg-card rounded-lg shadow-md border border-border">
             <div className="p-6 border-b border-border">
-              <h3>Historia transakcji</h3>
+              <h3>Podsumowanie</h3>
             </div>
 
-            <div className="divide-y divide-border">
-              {transactions.map((transaction) => (
-                <div key={transaction.id} className="p-4 hover:bg-muted/50 transition">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {transaction.type === 'deposit' && (
-                        <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
-                          <ArrowDownCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        </div>
-                      )}
-                      {transaction.type === 'withdraw' && (
-                        <div className="bg-blue-100 dark:bg-blue-900 p-2 rounded-full">
-                          <ArrowUpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        </div>
-                      )}
-                      {transaction.type === 'bet' && (
-                        <div className="bg-orange-100 dark:bg-orange-900 p-2 rounded-full">
-                          <ArrowUpCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                        </div>
-                      )}
-                      {transaction.type === 'win' && (
-                        <div className="bg-green-100 dark:bg-green-900 p-2 rounded-full">
-                          <ArrowDownCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        </div>
-                      )}
-
-                      <div>
-                        <div className="font-medium">{transaction.method}</div>
-                        <div className="text-sm text-muted-foreground">{transaction.date}</div>
-                      </div>
-                    </div>
-
-                    <div className={`font-bold ${transaction.amount >= 0 ? 'text-green-600' : 'text-foreground'}`}>
-                      {transaction.amount >= 0 ? '+' : ''}{transaction.amount.toFixed(2)} PLN
-                    </div>
-                  </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div>
+                  <div className="font-medium">Saldo główne</div>
+                  <div className="text-sm text-muted-foreground">Dostępne do obstawiania</div>
                 </div>
-              ))}
+                <div className="text-xl font-bold text-green-600">{user?.balance?.toFixed(2) || '0.00'} PLN</div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                <div>
+                  <div className="font-medium">Freebet</div>
+                  <div className="text-sm text-muted-foreground">Środki bonusowe</div>
+                </div>
+                <div className="text-xl font-bold text-blue-600">{user?.freeBetBalance?.toFixed(2) || '0.00'} PLN</div>
+              </div>
             </div>
           </div>
         </div>

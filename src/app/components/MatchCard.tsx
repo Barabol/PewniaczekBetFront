@@ -12,10 +12,12 @@ interface MatchCardProps {
     away: number;
   };
   isLive?: boolean;
-  onAddToBet: (team: string, odd: number, match: string) => void;
+  betId?: number;
+  betType?: 'win' | 'score' | 'prediction';
+  onAddToBet: (team: string, odd: number, match: string, betId?: number, betType?: 'win' | 'score' | 'prediction') => void;
 }
 
-export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, onAddToBet }: MatchCardProps) {
+export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betId, betType, onAddToBet }: MatchCardProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleOddClick = (type: 'home' | 'draw' | 'away') => {
@@ -24,7 +26,7 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, onAd
     const matchName = `${homeTeam} vs ${awayTeam}`;
 
     setSelected(type);
-    onAddToBet(teamName, odd, matchName);
+    onAddToBet(teamName, odd, matchName, betId, betType);
   };
 
   return (

@@ -2,48 +2,43 @@ import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { Gamepad2 } from 'lucide-react';
 import { useBetting } from '../context';
+import { useState, useEffect } from 'react';
+import { betService } from '../services';
+import type { PredictionBetDto } from '../types';
 
-const esportsMatches = [
-  {
-    id: 1,
-    league: 'CS:GO - ESL Pro League',
-    homeTeam: 'FaZe Clan',
-    awayTeam: 'Natus Vincere',
-    time: 'Dzisiaj 19:00',
-    odds: { home: 2.15, draw: 15.00, away: 1.75 },
+function mapPredictionToMatch(bet: PredictionBetDto) {
+  return {
+    id: bet.id,
+    league: 'E-sport',
+    homeTeam: 'Tak',
+    awayTeam: 'Nie',
+    time: new Date(bet.startDate).toLocaleString('pl-PL', {
+      day: 'numeric',
+      month: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }),
+    odds: {
+      home: bet.currentMultiplier || 2.0,
+      draw: 1.0,
+      away: bet.currentMultiplier || 2.0,
+    },
     isLive: false,
-  },
-  {
-    id: 2,
-    league: 'League of Legends - LEC',
-    homeTeam: 'G2 Esports',
-    awayTeam: 'Fnatic',
-    time: '23:12',
-    odds: { home: 1.85, draw: 12.00, away: 2.05 },
-    isLive: true,
-  },
-  {
-    id: 3,
-    league: 'Dota 2 - DPC',
-    homeTeam: 'Team Spirit',
-    awayTeam: 'OG',
-    time: 'Jutro 16:00',
-    odds: { home: 1.95, draw: 14.00, away: 1.95 },
-    isLive: false,
-  },
-  {
-    id: 4,
-    league: 'Valorant - VCT',
-    homeTeam: 'Sentinels',
-    awayTeam: 'Loud',
-    time: 'Dzisiaj 21:00',
-    odds: { home: 2.30, draw: 16.00, away: 1.65 },
-    isLive: false,
-  },
-];
+    betId: bet.id,
+    betType: 'prediction' as const,
+  };
+}
 
 export function EsportsPage() {
   const { bets, addBet, removeBet, clearAllBets } = useBetting();
+  const [matches, setMatches] = useState<ReturnType<typeof mapPredictionToMatch>[]>([]);
+
+  useEffect(() => {
+    betService.getPredictionCurrent(0, 10).then((page) => {
+      setMatches(page.content.map(mapPredictionToMatch));
+    }).catch(() => {});
+  }, []);
+
   const games = [
     { name: 'CS:GO', matches: 45 },
     { name: 'League of Legends', matches: 67 },
@@ -84,7 +79,7 @@ export function EsportsPage() {
           </div>
 
           <div className="grid gap-4">
-            {esportsMatches.map((match) => (
+            {matches.map((match) => (
               <MatchCard
                 key={match.id}
                 league={match.league}
@@ -93,6 +88,8 @@ export function EsportsPage() {
                 time={match.time}
                 odds={match.odds}
                 isLive={match.isLive}
+                betId={match.betId}
+                betType={match.betType}
                 onAddToBet={addBet}
               />
             ))}
@@ -100,11 +97,7 @@ export function EsportsPage() {
         </div>
 
         <div>
-          <BettingSlip
-            bets={bets}
-            onRemoveBet={removeBet}
-            onClearAll={clearAllBets}
-          />
+          <BettingSlip />
         </div>
       </div>
     </div>

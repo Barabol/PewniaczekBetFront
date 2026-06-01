@@ -1,24 +1,29 @@
 import { X, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useBetting } from '../context';
+import { toast } from 'sonner';
 
-interface Bet {
-  team: string;
-  odd: number;
-  match: string;
-  id: string;
-}
-
-interface BettingSlipProps {
-  bets: Bet[];
-  onRemoveBet: (id: string) => void;
-  onClearAll: () => void;
-}
-
-export function BettingSlip({ bets, onRemoveBet, onClearAll }: BettingSlipProps) {
+export function BettingSlip() {
+  const { bets, removeBet, clearAllBets, totalOdds, potentialWin, placeBets } = useBetting();
   const [stake, setStake] = useState<string>('10');
+  const [isPlacing, setIsPlacing] = useState(false);
 
-  const totalOdds = bets.reduce((acc, bet) => acc * bet.odd, 1);
-  const potentialWin = parseFloat(stake) * totalOdds;
+  const handlePlaceBet = async () => {
+    const stakeNum = parseFloat(stake);
+    if (isNaN(stakeNum) || stakeNum <= 0) {
+      toast.error('Podaj prawidłową stawkę');
+      return;
+    }
+    setIsPlacing(true);
+    try {
+      await placeBets(stakeNum);
+      toast.success('Zakład został pomyślnie złożony!');
+    } catch {
+      toast.error('Nie udało się złożyć zakładu');
+    } finally {
+      setIsPlacing(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md sticky top-4">
@@ -27,7 +32,7 @@ export function BettingSlip({ bets, onRemoveBet, onClearAll }: BettingSlipProps)
           <h3>Kupon zakładów</h3>
           {bets.length > 0 && (
             <button
-              onClick={onClearAll}
+              onClick={clearAllBets}
               className="text-sm hover:text-green-200 transition flex items-center gap-1"
             >
               <Trash2 className="w-4 h-4" />
@@ -59,7 +64,7 @@ export function BettingSlip({ bets, onRemoveBet, onClearAll }: BettingSlipProps)
                       <div className="font-medium">{bet.team}</div>
                     </div>
                     <button
-                      onClick={() => onRemoveBet(bet.id)}
+                      onClick={() => removeBet(bet.id)}
                       className="text-muted-foreground hover:text-destructive transition"
                     >
                       <X className="w-4 h-4" />
@@ -92,12 +97,16 @@ export function BettingSlip({ bets, onRemoveBet, onClearAll }: BettingSlipProps)
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Potencjalna wygrana:</span>
-                  <span className="font-bold text-green-600">{potentialWin.toFixed(2)} PLN</span>
+                  <span className="font-bold text-green-600">{potentialWin(parseFloat(stake) || 0).toFixed(2)} PLN</span>
                 </div>
               </div>
 
-              <button className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium">
-                Obstaw teraz
+              <button
+                onClick={handlePlaceBet}
+                disabled={isPlacing}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPlacing ? 'Obstawianie...' : 'Obstaw teraz'}
               </button>
             </div>
           </>

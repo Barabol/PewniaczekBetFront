@@ -1,4 +1,4 @@
-import { User, Mail, Phone, Calendar, Settings, History, Wallet, LogOut } from 'lucide-react';
+import { User, Mail, Settings, History, Wallet, LogOut, TrendingUp, Activity } from 'lucide-react';
 import { useAuth } from '../context';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,10 +10,11 @@ export function ProfilePage() {
     navigate(`/${page}`);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <h2 className="mb-6">Mój profil</h2>
@@ -26,7 +27,7 @@ export function ProfilePage() {
                 <User className="w-12 h-12" />
               </div>
               <h3 className="mb-1">{user?.name || 'Użytkownik'}</h3>
-              <p className="text-sm text-muted-foreground">ID: {user?.id || '#00000000'}</p>
+              <p className="text-sm text-muted-foreground">ID: #{user?.id || '00000000'}</p>
             </div>
 
             <div className="space-y-3">
@@ -71,23 +72,23 @@ export function ProfilePage() {
                 <Mail className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
                   <div className="text-sm text-muted-foreground">Email</div>
-                  <div>{user?.email || 'brak@email.com'}</div>
+                  <div>{user?.name || 'brak@email.com'}</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <Phone className="w-5 h-5 text-muted-foreground" />
+                <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <div className="text-sm text-muted-foreground">Telefon</div>
-                  <div>+48 123 456 789</div>
+                  <div className="text-sm text-muted-foreground">Saldo</div>
+                  <div className="font-bold text-green-600">{user?.balance?.toFixed(2) || '0.00'} PLN</div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <Calendar className="w-5 h-5 text-muted-foreground" />
+                <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <div className="text-sm text-muted-foreground">Data rejestracji</div>
-                  <div>15 marca 2026</div>
+                  <div className="text-sm text-muted-foreground">Freebet</div>
+                  <div>{user?.freeBetBalance?.toFixed(2) || '0.00'} PLN</div>
                 </div>
               </div>
             </div>
@@ -98,20 +99,20 @@ export function ProfilePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-green-600">234</div>
-                <div className="text-sm text-muted-foreground mt-1">Zakłady</div>
-              </div>
-              <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-green-600">142</div>
+                <div className="text-2xl font-bold text-green-600">{user?.wins || 0}</div>
                 <div className="text-sm text-muted-foreground mt-1">Wygrane</div>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-green-600">60.7%</div>
-                <div className="text-sm text-muted-foreground mt-1">Skuteczność</div>
+                <div className="text-2xl font-bold text-destructive">{user?.losses || 0}</div>
+                <div className="text-sm text-muted-foreground mt-1">Przegrane</div>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-green-600">+1,234</div>
-                <div className="text-sm text-muted-foreground mt-1">Zysk (PLN)</div>
+                <div className="text-2xl font-bold text-green-600">{user?.winsAmount?.toFixed(0) || '0'}</div>
+                <div className="text-sm text-muted-foreground mt-1">Wygrane (PLN)</div>
+              </div>
+              <div className="text-center p-4 bg-muted rounded-lg">
+                <div className="text-2xl font-bold text-destructive">{user?.lossesAmount?.toFixed(0) || '0'}</div>
+                <div className="text-sm text-muted-foreground mt-1">Przegrane (PLN)</div>
               </div>
             </div>
           </div>
