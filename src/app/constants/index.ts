@@ -102,7 +102,7 @@ export const VALIDATION_MESSAGES = {
 
 // API Endpoints
 export const API_ENDPOINTS = {
-  BASE_URL: 'http://172.21.225.41:8080',
+  BASE_URL: '',
   USER: {
     LOGIN: '/api/user/login',
     REGISTER: '/api/user/register',

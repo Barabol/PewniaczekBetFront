@@ -1,9 +1,10 @@
 import { apiClient } from './apiClient';
 import { API_ENDPOINTS } from '../constants';
+import type { RedirectView } from '../types';
 
 export const paymentService = {
   send: (amount: number) =>
-    apiClient.post<unknown>(API_ENDPOINTS.PAYMENT.SEND, amount),
+    apiClient.post<RedirectView>(API_ENDPOINTS.PAYMENT.SEND, amount),
 
   reloadAll: () =>
     apiClient.get<string>(API_ENDPOINTS.PAYMENT.RELOAD_ALL),

@@ -10,6 +10,24 @@ export class ApiError extends Error {
   }
 }
 
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+    try {
+      const errorBody = await response.text();
+      if (errorBody) message = errorBody;
+    } catch {}
+    throw new ApiError(message, response.status);
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return response.text() as unknown as T;
+}
+
 async function request<T>(
   endpoint: string,
   method: string,
@@ -44,17 +62,7 @@ async function request<T>(
   }
 
   const response = await fetch(url, config);
-
-  if (!response.ok) {
-    throw new ApiError(`HTTP ${response.status}`, response.status);
-  }
-
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    return response.json();
-  }
-
-  return response.text() as unknown as T;
+  return handleResponse<T>(response);
 }
 
 export const apiClient = {

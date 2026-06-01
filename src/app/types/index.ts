@@ -315,6 +315,15 @@ export interface ValidationResult {
   error?: string;
 }
 
+// Payment Types
+export interface RedirectView {
+  url?: string;
+  statusCode?: Record<string, unknown>;
+  contextRelative?: boolean;
+  http10Compatible?: boolean;
+  exposeModelAttributes?: boolean;
+}
+
 // Sport Categories
 export interface SportCategory {
   name: string;

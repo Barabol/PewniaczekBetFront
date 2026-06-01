@@ -1,13 +1,27 @@
-import { ArrowDownCircle, ArrowUpCircle, CreditCard, Landmark } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowDownCircle, ArrowUpCircle, CreditCard, Landmark, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
 import { paymentService } from '../services';
+import { ApiError } from '../services';
 import { toast } from 'sonner';
+import { useSearchParams } from 'react-router-dom';
 
 export function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
   const { user, refreshUser } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const paymentId = searchParams.get('paymentId');
+    if (paymentId) {
+      paymentService.redirect(Number(paymentId))
+        .then(() => refreshUser())
+        .then(() => toast.success('Płatność zakończona pomyślnie'))
+        .catch(() => toast.error('Nie udało się przetworzyć płatności'));
+    }
+  }, []);
 
   const handlePayment = async () => {
     const amountNum = parseFloat(amount);
@@ -15,13 +29,21 @@ export function WalletPage() {
       toast.error('Podaj prawidłową kwotę');
       return;
     }
+    setLoading(true);
     try {
       const result = await paymentService.send(Math.round(amountNum));
-      await refreshUser();
-      toast.success('Płatność została zrealizowana');
-      setAmount('');
-    } catch {
-      toast.error('Nie udało się zrealizować płatności');
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        await refreshUser();
+        toast.success('Płatność została zrealizowana');
+        setAmount('');
+      }
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Nie udało się zrealizować płatności';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,9 +121,10 @@ export function WalletPage() {
 
               <button
                 onClick={handlePayment}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {activeTab === 'deposit' ? 'Wpłać środki' : 'Wypłać środki'}
+                {loading ? 'Przetwarzanie...' : activeTab === 'deposit' ? 'Wpłać środki' : 'Wypłać środki'}
               </button>
 
               <p className="text-xs text-muted-foreground mt-3 text-center">
@@ -134,6 +157,26 @@ export function WalletPage() {
                 </div>
                 <div className="text-xl font-bold text-blue-600">{user?.freeBetBalance?.toFixed(2) || '0.00'} PLN</div>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-lg shadow-md border border-border mt-6">
+            <div className="p-6">
+              <button
+                onClick={async () => {
+                  try {
+                    await paymentService.reloadAll();
+                    await refreshUser();
+                    toast.success('Stan konta został odświeżony');
+                  } catch {
+                    toast.error('Nie udało się odświeżyć stanu konta');
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 p-3 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900 transition"
+              >
+                <ExternalLink className="w-5 h-5" />
+                Odśwież stan konta
+              </button>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '../context';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { ApiError } from '../services';
 
 export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -24,8 +25,9 @@ export function LoginPage() {
         toast.success('Zalogowano pomyślnie!');
       }
       navigate('/');
-    } catch {
-      toast.error(isRegister ? 'Nie udało się utworzyć konta' : 'Nieprawidłowy email lub hasło');
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Błąd połączenia z serwerem';
+      toast.error(msg);
     }
   };
 
