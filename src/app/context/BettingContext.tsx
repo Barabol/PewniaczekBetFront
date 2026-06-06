@@ -1,26 +1,34 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import type { Bet } from '../types';
+import { betService } from '../services';
+import { useAuth } from './AuthContext';
+
+type BetType = 'win' | 'score' | 'prediction';
 
 interface BettingContextType {
   bets: Bet[];
-  addBet: (team: string, odd: number, match: string) => void;
+  addBet: (team: string, odd: number, match: string, betId?: number, betType?: BetType) => void;
   removeBet: (id: string) => void;
   clearAllBets: () => void;
   totalOdds: number;
   potentialWin: (stake: number) => number;
+  placeBets: (stake: number, isFreeBet?: boolean) => Promise<void>;
 }
 
 const BettingContext = createContext<BettingContextType | undefined>(undefined);
 
 export function BettingProvider({ children }: { children: ReactNode }) {
   const [bets, setBets] = useState<Bet[]>([]);
+  const { refreshUser } = useAuth();
 
-  const addBet = (team: string, odd: number, match: string) => {
+  const addBet = (team: string, odd: number, match: string, betId?: number, betType?: BetType) => {
     const newBet: Bet = {
       team,
       odd,
       match,
       id: `${Date.now()}-${Math.random()}`,
+      betId,
+      isFreeBet: false,
     };
 
     const existingBetIndex = bets.findIndex(bet => bet.match === match);
@@ -48,6 +56,21 @@ export function BettingProvider({ children }: { children: ReactNode }) {
     return stake * totalOdds;
   };
 
+  const placeBets = async (stake: number, isFreeBet = false) => {
+    for (const bet of bets) {
+      if (bet.betId) {
+        await betService.placeWinBet({
+          betId: bet.betId,
+          ammount: Math.round((stake / bets.length) * 100),
+          isFreeBet,
+          team: bet.team === 'home',
+        });
+      }
+    }
+    clearAllBets();
+    await refreshUser();
+  };
+
   return (
     <BettingContext.Provider
       value={{
@@ -57,6 +80,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
         clearAllBets,
         totalOdds,
         potentialWin,
+        placeBets,
       }}
     >
       {children}

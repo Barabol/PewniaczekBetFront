@@ -3,66 +3,51 @@ import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { Flame, Star } from 'lucide-react';
 import { useBetting } from '../context';
+import { useState, useEffect } from 'react';
+import { betService } from '../services';
+import type { WinBetDto } from '../types';
 
-const mockMatches = [
-  {
-    id: 1,
-    league: 'Premier League',
-    homeTeam: 'Manchester United',
-    awayTeam: 'Liverpool',
-    time: 'Dzisiaj 20:00',
-    odds: { home: 2.45, draw: 3.20, away: 2.90 },
-    isLive: false,
-  },
-  {
-    id: 2,
-    league: 'La Liga',
-    homeTeam: 'Real Madryt',
-    awayTeam: 'Barcelona',
-    time: 'Dzisiaj 22:00',
-    odds: { home: 1.95, draw: 3.60, away: 3.80 },
-    isLive: false,
-  },
-  {
-    id: 3,
-    league: 'Bundesliga',
-    homeTeam: 'Bayern Monachium',
-    awayTeam: 'Borussia Dortmund',
-    time: 'Jutro 18:30',
-    odds: { home: 1.75, draw: 3.80, away: 4.50 },
-    isLive: false,
-  },
-  {
-    id: 4,
-    league: 'Serie A',
-    homeTeam: 'Juventus',
-    awayTeam: 'AC Milan',
-    time: 'Dzisiaj 21:45',
-    odds: { home: 2.10, draw: 3.40, away: 3.30 },
-    isLive: false,
-  },
-  {
-    id: 5,
-    league: 'Ligue 1',
-    homeTeam: 'PSG',
-    awayTeam: 'Olympique Marsylia',
-    time: 'Jutro 20:00',
-    odds: { home: 1.55, draw: 4.20, away: 5.50 },
-    isLive: false,
-  },
-  {
-    id: 6,
-    league: 'Ekstraklasa',
-    homeTeam: 'Legia Warszawa',
-    awayTeam: 'Lech Poznań',
-    time: 'Jutro 17:30',
-    odds: { home: 2.25, draw: 3.10, away: 3.20 },
-    isLive: false,
-  },
-];
+function mapWinBetToMatch(bet: WinBetDto) {
+  const now = new Date();
+  const stopDate = new Date(bet.stopDate);
+  const isLive = stopDate > now && stopDate.getTime() - now.getTime() < 7200000;
+
+  return {
+    id: bet.id,
+    league: bet.game?.sport || bet.name || 'Sport',
+    homeTeam: bet.game?.team1 || 'Drużyna 1',
+    awayTeam: bet.game?.team2 || 'Drużyna 2',
+    time: isLive
+      ? 'LIVE'
+      : new Date(bet.stopDate).toLocaleString('pl-PL', {
+          day: 'numeric',
+          month: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+    odds: {
+      home: bet.currentMultiplier || 2.0,
+      draw: 3.0,
+      away: 2.0,
+    },
+    isLive,
+    betId: bet.id,
+    betType: 'win' as const,
+  };
+}
 
 export function HomePage() {
   const { bets, addBet, removeBet, clearAllBets } = useBetting();
+  const [matches, setMatches] = useState<ReturnType<typeof mapWinBetToMatch>[]>([]);
+
+  useEffect(() => {
+    betService.getWinCurrent(undefined, 0, 10).then((page) => {
+      setMatches(page.content.map(mapWinBetToMatch));
+    }).catch(() => {
+      // Fallback to empty
+    });
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
@@ -85,7 +70,7 @@ export function HomePage() {
               <h2>Polecane zakłady</h2>
             </div>
             <div className="grid gap-4">
-              {mockMatches.map((match) => (
+              {matches.map((match) => (
                 <MatchCard
                   key={match.id}
                   league={match.league}
@@ -94,6 +79,8 @@ export function HomePage() {
                   time={match.time}
                   odds={match.odds}
                   isLive={match.isLive}
+                  betId={match.betId}
+                  betType={match.betType}
                   onAddToBet={addBet}
                 />
               ))}
@@ -102,11 +89,7 @@ export function HomePage() {
         </div>
 
         <div>
-          <BettingSlip
-            bets={bets}
-            onRemoveBet={removeBet}
-            onClearAll={clearAllBets}
-          />
+          <BettingSlip />
         </div>
       </div>
     </div>

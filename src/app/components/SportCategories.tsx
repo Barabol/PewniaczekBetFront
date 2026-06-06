@@ -11,13 +11,13 @@ const sports = [
 
 export function SportCategories() {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
+    <div className="bg-card rounded-lg shadow-md p-4 border border-border">
       <h3 className="mb-4">Popularne sporty</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {sports.map((sport) => (
           <button
             key={sport.name}
-            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-green-500 hover:bg-green-50 transition"
+            className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-green-500 hover:bg-green-500/10 transition"
           >
             <sport.icon className="w-6 h-6 text-green-600" />
             <span className="text-sm">{sport.name}</span>

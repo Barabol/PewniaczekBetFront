@@ -2,48 +2,38 @@ import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { Radio } from 'lucide-react';
 import { useBetting } from '../context';
+import { useState, useEffect } from 'react';
+import { betService } from '../services';
+import type { WinBetDto, ScoreBetDto } from '../types';
 
-const liveMatches = [
-  {
-    id: 1,
-    league: 'La Liga',
-    homeTeam: 'Real Madryt',
-    awayTeam: 'Barcelona',
-    time: '45:23',
-    odds: { home: 1.95, draw: 3.60, away: 3.80 },
+function mapToMatch(bet: WinBetDto | ScoreBetDto) {
+  return {
+    id: bet.id,
+    league: bet.game?.sport || bet.name || 'Sport',
+    homeTeam: bet.game?.team1 || 'Drużyna 1',
+    awayTeam: bet.game?.team2 || 'Drużyna 2',
+    time: 'LIVE',
+    odds: {
+      home: bet.currentMultiplier || 2.0,
+      draw: 3.0,
+      away: 2.0,
+    },
     isLive: true,
-  },
-  {
-    id: 2,
-    league: 'Ligue 1',
-    homeTeam: 'PSG',
-    awayTeam: 'Olympique Marsylia',
-    time: '67:12',
-    odds: { home: 1.55, draw: 4.20, away: 5.50 },
-    isLive: true,
-  },
-  {
-    id: 3,
-    league: 'Serie A',
-    homeTeam: 'Inter Mediolan',
-    awayTeam: 'Napoli',
-    time: '23:45',
-    odds: { home: 2.15, draw: 3.30, away: 3.40 },
-    isLive: true,
-  },
-  {
-    id: 4,
-    league: 'Premier League',
-    homeTeam: 'Chelsea',
-    awayTeam: 'Arsenal',
-    time: '78:56',
-    odds: { home: 2.80, draw: 3.10, away: 2.50 },
-    isLive: true,
-  },
-];
+    betId: bet.id,
+    betType: 'win' as const,
+  };
+}
 
 export function LivePage() {
   const { bets, addBet, removeBet, clearAllBets } = useBetting();
+  const [matches, setMatches] = useState<ReturnType<typeof mapToMatch>[]>([]);
+
+  useEffect(() => {
+    betService.getWinCurrent(undefined, 0, 10).then((page) => {
+      setMatches(page.content.map(mapToMatch));
+    }).catch(() => {});
+  }, []);
+
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -57,7 +47,7 @@ export function LivePage() {
           </div>
 
           <div className="grid gap-4">
-            {liveMatches.map((match) => (
+            {matches.map((match) => (
               <MatchCard
                 key={match.id}
                 league={match.league}
@@ -66,6 +56,8 @@ export function LivePage() {
                 time={match.time}
                 odds={match.odds}
                 isLive={match.isLive}
+                betId={match.betId}
+                betType={match.betType}
                 onAddToBet={addBet}
               />
             ))}
@@ -73,11 +65,7 @@ export function LivePage() {
         </div>
 
         <div>
-          <BettingSlip
-            bets={bets}
-            onRemoveBet={removeBet}
-            onClearAll={clearAllBets}
-          />
+          <BettingSlip />
         </div>
       </div>
     </div>
