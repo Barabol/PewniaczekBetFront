@@ -1,4 +1,4 @@
-import { ArrowDownCircle, ArrowUpCircle, CreditCard, Landmark, ExternalLink } from 'lucide-react';
+import { CreditCard, Landmark, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
 import { paymentService } from '../services';
@@ -31,7 +31,7 @@ export function WalletPage() {
     }
     setLoading(true);
     try {
-      const result = await paymentService.send(Math.round(amountNum));
+      const result = await paymentService.send(Math.round(amountNum * 100));
       if (result.url) {
         window.location.href = result.url;
       } else {
@@ -108,11 +108,11 @@ export function WalletPage() {
               <div className="mb-4">
                 <label className="block text-sm mb-2">Metoda płatności</label>
                 <div className="space-y-2">
-                  <button className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 transition">
+                  <button className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition">
                     <CreditCard className="w-5 h-5 text-muted-foreground" />
                     <span>Karta kredytowa/debetowa</span>
                   </button>
-                  <button className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 transition">
+                  <button className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition">
                     <Landmark className="w-5 h-5 text-muted-foreground" />
                     <span>Przelew bankowy</span>
                   </button>
@@ -172,7 +172,7 @@ export function WalletPage() {
                     toast.error('Nie udało się odświeżyć stanu konta');
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900 transition"
+                className="w-full flex items-center justify-center gap-2 p-3 bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-500/20 transition"
               >
                 <ExternalLink className="w-5 h-5" />
                 Odśwież stan konta

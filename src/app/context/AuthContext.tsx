@@ -18,14 +18,13 @@ function mapUserDto(dto: import('../types').UserDto): User {
   return {
     id: String(dto.id),
     name: `${dto.name} ${dto.surname}`,
-    email: '',
-    balance: dto.balance,
     surname: dto.surname,
-    freeBetBalance: dto.freeBetBalance,
+    balance: dto.balance / 100,
+    freeBetBalance: dto.freeBetBalance / 100,
     wins: dto.wins,
     losses: dto.losses,
-    winsAmount: dto.winsAmount,
-    lossesAmount: dto.lossesAmount,
+    winsAmount: dto.winsAmount / 100,
+    lossesAmount: dto.lossesAmount / 100,
     accountTypeId: dto.accountTypeId,
     public: dto.public,
   };

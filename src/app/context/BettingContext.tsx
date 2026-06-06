@@ -61,7 +61,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
       if (bet.betId) {
         await betService.placeWinBet({
           betId: bet.betId,
-          ammount: Math.round(stake / bets.length),
+          ammount: Math.round((stake / bets.length) * 100),
           isFreeBet,
           team: bet.team === 'home',
         });

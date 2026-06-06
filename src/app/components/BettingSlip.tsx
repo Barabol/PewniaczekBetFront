@@ -26,7 +26,7 @@ export function BettingSlip() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md sticky top-4">
+    <div className="bg-card rounded-lg shadow-md sticky top-4 border border-border">
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-t-lg">
         <div className="flex items-center justify-between mb-2">
           <h3>Kupon zakładów</h3>
@@ -56,7 +56,7 @@ export function BettingSlip() {
               {bets.map((bet) => (
                 <div
                   key={bet.id}
-                  className="p-3 bg-gray-50 rounded-lg border border-border"
+                  className="p-3 bg-muted rounded-lg border border-border"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
@@ -85,12 +85,12 @@ export function BettingSlip() {
                   type="number"
                   value={stake}
                   onChange={(e) => setStake(e.target.value)}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-input-background"
                   min="1"
                 />
               </div>
 
-              <div className="bg-green-50 p-3 rounded-lg">
+              <div className="bg-muted p-3 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm">Łączny kurs:</span>
                   <span className="font-bold">{totalOdds.toFixed(2)}</span>

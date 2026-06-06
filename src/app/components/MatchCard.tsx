@@ -30,8 +30,8 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-2 flex items-center justify-between border-b border-border">
+    <div className="bg-card rounded-lg shadow-md hover:shadow-lg transition overflow-hidden border border-border">
+      <div className="bg-muted px-4 py-2 flex items-center justify-between border-b border-border">
         <span className="text-sm text-muted-foreground">{league}</span>
         {isLive && (
           <span className="flex items-center gap-1 text-xs bg-red-500 text-white px-2 py-1 rounded-full">
@@ -67,7 +67,7 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
             className={`p-3 rounded-lg border transition ${
               selected === 'home'
                 ? 'bg-green-600 border-green-600 text-white'
-                : 'border-border hover:border-green-500 hover:bg-green-50'
+                : 'border-border hover:border-green-500 hover:bg-green-500/10'
             }`}
           >
             <div className="text-xs text-center mb-1">1</div>
@@ -78,7 +78,7 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
             className={`p-3 rounded-lg border transition ${
               selected === 'draw'
                 ? 'bg-green-600 border-green-600 text-white'
-                : 'border-border hover:border-green-500 hover:bg-green-50'
+                : 'border-border hover:border-green-500 hover:bg-green-500/10'
             }`}
           >
             <div className="text-xs text-center mb-1">X</div>
@@ -89,7 +89,7 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
             className={`p-3 rounded-lg border transition ${
               selected === 'away'
                 ? 'bg-green-600 border-green-600 text-white'
-                : 'border-border hover:border-green-500 hover:bg-green-50'
+                : 'border-border hover:border-green-500 hover:bg-green-500/10'
             }`}
           >
             <div className="text-xs text-center mb-1">2</div>
@@ -98,7 +98,7 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
         </div>
       </div>
 
-      <div className="px-4 py-2 bg-gray-50 border-t border-border">
+      <div className="px-4 py-2 bg-muted border-t border-border">
         <button className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1">
           <TrendingUp className="w-3 h-3" />
           +127 więcej zakładów

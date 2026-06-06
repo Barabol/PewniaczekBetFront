@@ -57,7 +57,7 @@ export function EsportsPage() {
             {games.map((game) => (
               <button
                 key={game.name}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950 transition"
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:border-green-500 hover:bg-green-500/10 transition"
               >
                 <Gamepad2 className="w-6 h-6 text-green-600" />
                 <span className="text-sm text-center">{game.name}</span>

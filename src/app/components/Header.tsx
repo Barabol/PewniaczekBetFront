@@ -34,23 +34,19 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
               Live
             </button>
             <button
-              onClick={() => onNavigate('promotions')}
-              className={`hover:text-green-200 transition ${currentPage === 'promotions' ? 'border-b-2 border-white' : ''}`}
-            >
-              Promocje
-            </button>
-            <button
-              onClick={() => onNavigate('results')}
-              className={`hover:text-green-200 transition ${currentPage === 'results' ? 'border-b-2 border-white' : ''}`}
-            >
-              Wyniki
-            </button>
-            <button
               onClick={() => onNavigate('esports')}
               className={`hover:text-green-200 transition ${currentPage === 'esports' ? 'border-b-2 border-white' : ''}`}
             >
               E-sport
             </button>
+            {isLoggedIn && (
+              <button
+                onClick={() => onNavigate('history')}
+                className={`hover:text-green-200 transition ${currentPage === 'history' ? 'border-b-2 border-white' : ''}`}
+              >
+                Historia
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -58,7 +54,7 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
             {isLoggedIn && (
               <button
                 onClick={() => onNavigate('wallet')}
-                className="hidden md:flex items-center gap-2 bg-white text-green-700 px-4 py-2 rounded-lg hover:bg-green-50 transition"
+                className="hidden md:flex items-center gap-2 bg-white dark:bg-white/10 text-green-700 dark:text-white px-4 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-white/20 transition"
               >
                 <Wallet className="w-4 h-4" />
                 <span>{balance.toFixed(2)} PLN</span>
