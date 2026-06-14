@@ -1,9 +1,9 @@
-import { Trophy, Mail, Lock, User } from 'lucide-react';
-import { useState } from 'react';
+import { Trophy, Mail, Lock, User, Github } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { ApiError } from '../services';
+import { ApiError, oathService } from '../services';
 
 export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -11,8 +11,39 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
-  const { login, register } = useAuth();
+  const [githubLoading, setGithubLoading] = useState(false);
+  const { login, register, setUserFromDto } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      oathService.callbackLoginGithub(code)
+        .then((dto) => {
+          setUserFromDto(dto);
+          toast.success('Zalogowano przez GitHub!');
+          navigate('/', { replace: true });
+        })
+        .catch(() => {
+          toast.error('Nie udało się zalogować przez GitHub');
+        });
+    }
+  }, []);
+
+  const handleGithubLogin = async () => {
+    setGithubLoading(true);
+    try {
+      const result = await oathService.loginGithub();
+      if (result?.url) {
+        window.location.href = result.url;
+      }
+    } catch {
+      toast.error('Nie udało się zainicjować logowania przez GitHub');
+    } finally {
+      setGithubLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +78,28 @@ export function LoginPage() {
         </div>
 
         <div className="bg-card rounded-lg shadow-lg p-8 border border-border">
+          {!isRegister && (
+            <>
+              <button
+                onClick={handleGithubLogin}
+                disabled={githubLoading}
+                className="w-full flex items-center justify-center gap-3 py-3 rounded-lg border border-border hover:bg-muted transition font-medium mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Github className="w-5 h-5" />
+                {githubLoading ? 'Przekierowanie...' : 'Kontynuuj przez GitHub'}
+              </button>
+
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-card px-2 text-muted-foreground">lub</span>
+                </div>
+              </div>
+            </>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {isRegister && (
               <div className="grid grid-cols-2 gap-4">

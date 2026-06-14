@@ -14,6 +14,18 @@ export interface UserDto {
   public: boolean;
 }
 
+export interface NewUserDto {
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+}
+
+export interface LoginUserDto {
+  email: string;
+  password: string;
+}
+
 export interface GameDto {
   id: number;
   name: string;
@@ -49,6 +61,8 @@ export interface PredictionBetDto {
   stopDate: string;
   trueBets: number;
   falseBets: number;
+  trueBetsAmount: number;
+  falseBetsAmount: number;
   pot: number;
   endedWith: boolean;
 }
@@ -130,6 +144,88 @@ export interface PagePredictionBetDto {
   totalPages: number;
   size: number;
   content: PredictionBetDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface PageUserDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+// ========== History DTOs ==========
+
+export interface UserWinBetDto {
+  user: UserDto;
+  bet: WinBetDto;
+  team: string;
+  multiplyer: number;
+  amount: number;
+}
+
+export interface PageUserWinBetDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserWinBetDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface UserScoreBetDto {
+  user: UserDto;
+  bet: ScoreBetDto;
+  team1Score: number;
+  team2Score: number;
+  multiplyer: number;
+  ammount: number;
+}
+
+export interface PageUserScoreBetDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserScoreBetDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface UserBetPredictionDto {
+  user: UserDto;
+  bet: PredictionBetDto;
+  prediction: boolean;
+  amount: number;
+}
+
+export interface PageUserBetPredictionDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserBetPredictionDto[];
   number: number;
   sort: SortObject;
   pageable: PageableObject;

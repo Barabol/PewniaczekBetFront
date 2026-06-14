@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import type { User } from '../types';
 import { userService } from '../services';
 
@@ -10,6 +10,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateBalance: (amount: number) => void;
+  setUserFromDto: (dto: import('../types').UserDto) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const setUserFromDto = (dto: import('../types').UserDto) => {
+    setUser(mapUserDto(dto));
+  };
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -76,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         refreshUser,
         updateBalance,
+        setUserFromDto,
       }}
     >
       {children}
