@@ -36,7 +36,7 @@ export const API_ENDPOINTS = {
     ALL: '/api/user/all',
     TOGGLE_VISIBILITY: '/api/user/toggleVisibility',
     FOLLOW: '/api/user/follow',
-    UNFOLLOW: '/api/user/follow',
+    UNFOLLOW: '/api/user/unfollow',
     FOLLOWERS: '/api/user/followers',
     FOLLOWED: '/api/user/followed',
   },

@@ -1,14 +1,17 @@
-import { CreditCard, Landmark, ExternalLink } from 'lucide-react';
+import { CreditCard, Landmark, ExternalLink, Bug } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
 import { paymentService } from '../services';
 import { ApiError } from '../services';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
+import { API_ENDPOINTS } from '../constants';
+import { apiClient } from '../services/apiClient';
 
 export function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [loading, setLoading] = useState(false);
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
@@ -25,21 +28,33 @@ export function WalletPage() {
 
   const handlePayment = async () => {
     const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
+    if (isNaN(amountNum) || amountNum < 10) {
       toast.error('Podaj prawidłową kwotę');
       return;
     }
     setLoading(true);
     try {
-      const result = await paymentService.send(Math.round(amountNum * 100));
+      const amountInGroszy = Math.round(amountNum * 100);
+      console.log('[WALLET DEBUG] Payment request:', {
+        amount: amountNum,
+        amountInGroszy,
+        timestamp: new Date().toISOString()
+      });
+      
+      const result = await paymentService.send(amountInGroszy);
+      console.log('[WALLET DEBUG] Payment response:', result);
+      
       if (result.url) {
+        console.log('[WALLET DEBUG] Redirecting to:', result.url);
         window.location.href = result.url;
       } else {
+        console.log('[WALLET DEBUG] No URL received, showing success message');
         await refreshUser();
         toast.success('Płatność została zrealizowana');
         setAmount('');
       }
     } catch (err) {
+      console.error('[WALLET DEBUG] Payment error:', err);
       const msg = err instanceof ApiError ? err.message : 'Nie udało się zrealizować płatności';
       toast.error(msg);
     } finally {
@@ -92,48 +107,65 @@ export function WalletPage() {
               </button>
             </div>
 
-            <div className="p-6">
-              <div className="mb-4">
-                <label className="block text-sm mb-2">Kwota (PLN)</label>
-                <input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-background"
-                  min="10"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm mb-2">Metoda płatności</label>
-                <div className="space-y-2">
-                  <button className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition">
-                    <CreditCard className="w-5 h-5 text-muted-foreground" />
-                    <span>Karta kredytowa/debetowa</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 p-3 border border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition">
-                    <Landmark className="w-5 h-5 text-muted-foreground" />
-                    <span>Przelew bankowy</span>
-                  </button>
+          <div className="p-6">
+            <div className="mb-4">
+              <label className="block text-sm mb-2">Kwota (PLN)</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-background"
+                min="10"
+              />
+              {amount && parseFloat(amount) > 0 && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  {parseFloat(amount) >= 10 ? '' : 'Minimalna wpłata: 10 PLN'}
                 </div>
-              </div>
-
-              <button
-                onClick={handlePayment}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Przetwarzanie...' : activeTab === 'deposit' ? 'Wpłać środki' : 'Wypłać środki'}
-              </button>
-
-              <p className="text-xs text-muted-foreground mt-3 text-center">
-                {activeTab === 'deposit'
-                  ? 'Minimalna wpłata: 10 PLN'
-                  : 'Minimalna wypłata: 20 PLN'}
-              </p>
+              )}
             </div>
+
+            <div className="mb-4">
+              <label className="block text-sm mb-2">Metoda płatności</label>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setPaymentMethod('card')}
+                  className={`w-full flex items-center gap-3 p-3 border rounded-lg transition ${paymentMethod === 'card'
+                    ? 'border-green-600 bg-green-500/10'
+                    : 'border-border hover:border-green-500 hover:bg-green-500/10'
+                  }`}
+                >
+                  <CreditCard className="w-5 h-5 text-muted-foreground" />
+                  <span>Karta kredytowa/debetowa</span>
+                </button>
+                <button
+                  onClick={() => setPaymentMethod('bank')}
+                  className={`w-full flex items-center gap-3 p-3 border rounded-lg transition ${paymentMethod === 'bank'
+                    ? 'border-green-600 bg-green-500/10'
+                    : 'border-border hover:border-green-500 hover:bg-green-500/10'
+                  }`}
+                >
+                  <Landmark className="w-5 h-5 text-muted-foreground" />
+                  <span>Przelew bankowy</span>
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={handlePayment}
+              disabled={loading || !amount || parseFloat(amount) < 10}
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Przetwarzanie...' : activeTab === 'deposit' ? 'Wpłać środki' : 'Wypłać środki'}
+            </button>
+
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+              {activeTab === 'deposit'
+                ? 'Minimalna wpłata: 10 PLN'
+                : 'Minimalna wypłata: 20 PLN'}
+            </p>
           </div>
+        </div>
         </div>
 
         <div className="lg:col-span-2">
@@ -158,29 +190,29 @@ export function WalletPage() {
                 <div className="text-xl font-bold text-blue-600">{user?.freeBetBalance?.toFixed(2) || '0.00'} PLN</div>
               </div>
             </div>
-          </div>
-
-          <div className="bg-card rounded-lg shadow-md border border-border mt-6">
-            <div className="p-6">
-              <button
-                onClick={async () => {
-                  try {
-                    await paymentService.reloadAll();
-                    await refreshUser();
-                    toast.success('Stan konta został odświeżony');
-                  } catch {
-                    toast.error('Nie udało się odświeżyć stanu konta');
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 p-3 bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-500/20 transition"
-              >
-                <ExternalLink className="w-5 h-5" />
-                Odśwież stan konta
-              </button>
+            </div>
+            
+            <div className="bg-card rounded-lg shadow-md border border-border mt-6">
+              <div className="p-6">
+                <button
+                  onClick={async () => {
+                    try {
+                      await paymentService.reloadAll();
+                      await refreshUser();
+                      toast.success('Stan konta został odświeżony');
+                    } catch {
+                      toast.error('Nie udało się odświeżyć stanu konta');
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 p-3 bg-green-500/10 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-500/20 transition"
+                >
+                  <ExternalLink className="w-5 h-5" />
+                  Odśwież stan konta
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
