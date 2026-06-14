@@ -11,21 +11,31 @@ export class ApiError extends Error {
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
+  console.log('[API CLIENT] Response headers:', Object.fromEntries(response.headers.entries()));
+  console.log('[API CLIENT] Response content-type:', response.headers.get('content-type'));
+  
   if (!response.ok) {
     let message = `HTTP ${response.status}`;
     try {
       const errorBody = await response.text();
+      console.log('[API CLIENT] Error response body:', errorBody);
       if (errorBody) message = errorBody;
-    } catch {}
+    } catch (parseError) {
+      console.log('[API CLIENT] Failed to parse error body:', parseError);
+    }
     throw new ApiError(message, response.status);
   }
 
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
-    return response.json();
+    const jsonBody = await response.json();
+    console.log('[API CLIENT] Parsed JSON response:', jsonBody);
+    return jsonBody as T;
   }
 
-  return response.text() as unknown as T;
+  const textBody = await response.text();
+  console.log('[API CLIENT] Response text:', textBody);
+  return textBody as unknown as T;
 }
 
 async function request<T>(
@@ -61,7 +71,23 @@ async function request<T>(
     config.body = JSON.stringify(body);
   }
 
+  console.log('[API CLIENT] Request:', {
+    url,
+    method,
+    body: body ? JSON.parse(JSON.stringify(body)) : null,
+    timestamp: new Date().toISOString()
+  });
+
   const response = await fetch(url, config);
+  
+  console.log('[API CLIENT] Response:', {
+    status: response.status,
+    statusText: response.statusText,
+    url: response.url,
+    headers: Object.fromEntries(response.headers.entries()),
+    timestamp: new Date().toISOString()
+  });
+  
   return handleResponse<T>(response);
 }
 

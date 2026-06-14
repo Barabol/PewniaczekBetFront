@@ -57,8 +57,59 @@ export function LoginPage() {
       }
       navigate('/');
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : 'Błąd połączenia z serwerem';
-      toast.error(msg);
+      const apiError = err instanceof ApiError ? err : null;
+      const msg = apiError ? apiError.message : (err instanceof Error ? err.message : '');
+      const status = apiError?.status;
+      
+      console.log('[LOGIN DEBUG] Login error:', {
+        msg,
+        status,
+        isApiError: !!apiError,
+      });
+      
+      let notification = '';
+      
+      if (isRegister) {
+        if (msg.includes('Email already exists') || msg.includes('email')) {
+          notification = 'Ten email jest już zarejestrowany. Jeśli masz już konto, zaloguj się.';
+        } else if (msg.includes('Password') || msg.includes('hasło')) {
+          notification = 'Hasło jest wymagane i musi mieć co najmniej 6 znaków.';
+        } else {
+          notification = 'Nie udało się utworzyć konta. Spróbuj ponownie później.';
+        }
+      } else if (
+        status === 401
+        || status === 403
+        || msg.includes('401')
+        || msg.includes('Invalid credentials')
+        || msg.includes('invalid')
+        || msg.includes('błędne')
+        || msg.includes('nieprawidłowe')
+        || msg.includes('hasło')
+        || msg.includes('authentication')
+        || msg.includes('Wrong password')
+        || msg.includes('wrong')
+        || msg.includes('Bad credentials')
+        || msg.includes('Unauthorized')
+        || msg.includes('unauthorized')
+        || msg.includes('nieautoryzowany')
+      ) {
+        notification = 'Nieprawidłowe dane logowania. Podany adres email lub hasło są nieprawidłowe.';
+      } else if (
+        status === 404
+        || msg.includes('Email not found')
+        || msg.includes('nie znaleziono email')
+        || msg.includes('not found')
+        || msg.includes('nie istnieje')
+        || msg.includes('not exist')
+      ) {
+        notification = 'Nie znaleziono konta z tym adresem email. Zarejestruj się, aby utworzyć nowe konto.';
+      } else {
+        notification = msg || 'Nie udało się zalogować. Sprawdź swoje dane i spróbuj ponownie.';
+      }
+      
+      console.log('[LOGIN DEBUG] Notification:', notification);
+      toast.error(notification);
     }
   };
 

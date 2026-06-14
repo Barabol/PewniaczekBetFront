@@ -1,6 +1,7 @@
 import { SportCategories } from '../components/SportCategories';
 import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
+import { SocialBettingPanel } from '../components/SocialBettingPanel';
 import { Flame, Star } from 'lucide-react';
 import { useBetting } from '../context';
 import { useState, useEffect } from 'react';
@@ -54,7 +55,10 @@ export function HomePage() {
         <SportCategories />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-1">
+          <SocialBettingPanel />
+        </div>
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
