@@ -1,4 +1,4 @@
-import { Trophy, Mail, Lock, User } from 'lucide-react';
+import { Trophy, Mail, Lock, User, Github } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +11,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
-  const { login, register } = useAuth();
+  const { login, register, loginWithGithub } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -181,6 +181,24 @@ export function LoginPage() {
               {isRegister ? 'Zaloguj się' : 'Zarejestruj się'}
             </button>
           </div>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">lub</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={loginWithGithub}
+            className="w-full flex items-center justify-center gap-3 bg-[#24292F] text-white py-3 rounded-lg hover:bg-[#1b1f23] transition font-medium"
+          >
+            <Github className="w-5 h-5" />
+            Zaloguj przez GitHub
+          </button>
         </div>
 
         <div className="mt-6 text-center text-xs text-muted-foreground">

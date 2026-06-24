@@ -10,7 +10,9 @@ import type {
   PageWinBetDto,
   PageScoreBetDto,
   PagePredictionBetDto,
-  BetHistoryItem,
+  PageUserWinBetDto,
+  PageUserScoreBetDto,
+  PageUserBetPredictionDto,
 } from '../types';
 
 export const betService = {
@@ -50,8 +52,12 @@ export const betService = {
   getPredictionAll: (page = 0, pageSize = 5) =>
     apiClient.get<PagePredictionBetDto>(API_ENDPOINTS.BET.PREDICTION_ALL, { page, pageSize }),
 
-  getHistory: (page = 0, pageSize = 10) =>
-    apiClient.get<{ content: BetHistoryItem[]; totalPages: number; totalElements: number; number: number; last: boolean }>(
-      API_ENDPOINTS.BET_HISTORY, { page, pageSize }
-    ),
+  getWinHistory: (page = 0, pageSize = 10, user?: number, sport?: string, findEnded?: boolean) =>
+    apiClient.get<PageUserWinBetDto>(API_ENDPOINTS.BET_HISTORY_WIN, { page, pageSize, user, sport, findEnded }),
+
+  getScoreHistory: (page = 0, pageSize = 10, user?: number, sport?: string, findEnded?: boolean) =>
+    apiClient.get<PageUserScoreBetDto>(API_ENDPOINTS.BET_HISTORY_SCORE, { page, pageSize, user, sport, findEnded }),
+
+  getPredictionHistory: (page = 0, pageSize = 10, user?: number, findEnded?: boolean) =>
+    apiClient.get<PageUserBetPredictionDto>(API_ENDPOINTS.BET_HISTORY_PREDICTION, { page, pageSize, user, findEnded }),
 };

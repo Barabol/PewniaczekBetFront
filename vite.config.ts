@@ -3,51 +3,96 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
+// ===== ONE LINE TO CHANGE =====
+const API_TARGET = 'https://pulmonary-broadband-taps.ngrok-free.dev'
+// ===============================
 
-function figmaAssetResolver() {
+function stripSecureFromCookie(proxyRes: any) {
+  const setCookie = proxyRes.headers['set-cookie']
+  if (setCookie) {
+    proxyRes.headers['set-cookie'] = Array.isArray(setCookie)
+      ? setCookie.map((c: string) => c.replace(/;\s*secure/gi, ''))
+      : setCookie.replace(/;\s*secure/gi, '')
+  }
+}
+
+function makeProxyConfig() {
   return {
-    name: 'figma-asset-resolver',
-    resolveId(id) {
-      if (id.startsWith('figma:asset/')) {
-        const filename = id.replace('figma:asset/', '')
-        return path.resolve(__dirname, 'src/assets', filename)
-      }
+    target: API_TARGET,
+    changeOrigin: true,
+    secure: false,
+    headers: {
+      'ngrok-skip-browser-warning': 'true',
+    },
+    configure: (proxy: any) => {
+      proxy.on('proxyRes', stripSecureFromCookie)
     },
   }
 }
 
 export default defineConfig({
   plugins: [
-    figmaAssetResolver(),
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
+    {
+      name: 'payment-checkout',
+      configureServer(server) {
+        server.middlewares.use('/api/payment/checkout', async (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405
+            res.end()
+            return
+          }
+
+          const chunks: Buffer[] = []
+          for await (const chunk of req) {
+            chunks.push(chunk)
+          }
+          const body = Buffer.concat(chunks).toString()
+
+          try {
+            const backendRes = await fetch(`${API_TARGET}/pay/send`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true',
+                cookie: req.headers.cookie || '',
+              },
+              body,
+              redirect: 'manual',
+            })
+
+            const location = backendRes.headers.get('Location')
+
+            res.setHeader('Content-Type', 'application/json')
+            if (location) {
+              res.end(JSON.stringify({ url: location }))
+            } else {
+              const text = await backendRes.text()
+              res.end(JSON.stringify({ url: text || undefined }))
+            }
+          } catch (err) {
+            res.statusCode = 502
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ error: 'Payment service unavailable' }))
+          }
+        })
+      },
+    },
   ],
   resolve: {
     alias: {
-      // Alias @ to the src directory
       '@': path.resolve(__dirname, './src'),
     },
   },
 
-  // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 
   server: {
     proxy: {
-      '/api': {
-        target: 'http://172.21.225.41:8080',
-        changeOrigin: true,
-      },
-      '/pay': {
-        target: 'http://172.21.225.41:8080',
-        changeOrigin: true,
-      },
-      '/social': {
-        target: 'http://172.21.225.41:8080',
-        changeOrigin: true,
-      },
+      '/api': makeProxyConfig(),
+      '/pay': makeProxyConfig(),
+      '/social': makeProxyConfig(),
     },
   },
 })

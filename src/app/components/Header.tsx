@@ -33,12 +33,6 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
             >
               Live
             </button>
-            <button
-              onClick={() => onNavigate('esports')}
-              className={`hover:text-green-200 transition ${currentPage === 'esports' ? 'border-b-2 border-white' : ''}`}
-            >
-              E-sport
-            </button>
             {isLoggedIn && (
               <button
                 onClick={() => onNavigate('history')}

@@ -3,7 +3,6 @@ import { ProtectedRoute } from './ProtectedRoute';
 
 import { HomePage } from '../pages/HomePage';
 import { LivePage } from '../pages/LivePage';
-import { EsportsPage } from '../pages/EsportsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { WalletPage } from '../pages/WalletPage';
@@ -14,7 +13,6 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/live" element={<LivePage />} />
-      <Route path="/esports" element={<EsportsPage />} />
       <Route path="/login" element={<LoginPage />} />
 
       <Route

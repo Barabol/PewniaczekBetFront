@@ -6,6 +6,11 @@ export const BETTING_LIMITS = {
   MAX_BETS_PER_SLIP: 20,
 } as const;
 
+export const PAYMENT_LIMITS = {
+  MIN_AMOUNT: 5,
+  MAX_AMOUNT: 1000,
+} as const;
+
 export const CURRENCY = {
   CODE: 'PLN',
   SYMBOL: 'zł',
@@ -14,7 +19,7 @@ export const CURRENCY = {
 export const ROUTES = {
   HOME: '/',
   LIVE: '/live',
-  ESPORTS: '/esports',
+
   LOGIN: '/login',
   PROFILE: '/profile',
   WALLET: '/wallet',
@@ -27,7 +32,7 @@ export const STORAGE_KEYS = {
 } as const;
 
 export const API_ENDPOINTS = {
-  BASE_URL: '',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL ?? '',
   USER: {
     LOGIN: '/api/user/login',
     REGISTER: '/api/user/register',
@@ -43,7 +48,7 @@ export const API_ENDPOINTS = {
   BET: {
     WIN_PLACE: '/api/bet/win/place',
     WIN_ADD: '/api/bet/win/add',
-    WIN_CURRENT: '/api/bet/win/curent',
+    WIN_CURRENT: '/api/bet/win/all',
     WIN_ALL: '/api/bet/win/all',
     SCORE_PLACE: '/api/bet/score/place',
     SCORE_ADD: '/api/bet/score/add',
@@ -55,13 +60,17 @@ export const API_ENDPOINTS = {
     PREDICTION_ALL: '/api/bet/prediction/all',
   },
   BET_HISTORY: '/api/bet/history',
+  BET_HISTORY_WIN: '/api/bet/win/history',
+  BET_HISTORY_SCORE: '/api/bet/score/history',
+  BET_HISTORY_PREDICTION: '/api/bet/prediction/history',
   PAYMENT: {
     SEND: '/pay/send',
+    SEND_CHECKOUT: '/api/payment/checkout',
     RELOAD_ALL: '/pay/reload_all',
     REDIRECT: '/pay/redirect',
   },
   OATH: {
-    GITHUB_INITIATE: '/social/github/initiate',
+    GITHUB_INITIATE: '/social/github/login',
     GITHUB_CALLBACK: '/social/github/callback',
     GITHUB_DELETE: '/social/github',
     ALL: '/social/all',

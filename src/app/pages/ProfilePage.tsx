@@ -1,4 +1,4 @@
-import { User, Wallet, LogOut, TrendingUp, Clock, UserPlus, UserMinus, Users } from 'lucide-react';
+import { User, Wallet, LogOut, TrendingUp, Clock, UserPlus, UserMinus, Users, Github } from 'lucide-react';
 import { useAuth } from '../context';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../services';
@@ -7,7 +7,7 @@ import type { UserDto } from '../types';
 import { toast } from 'sonner';
 
 export function ProfilePage() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, loginWithGithub } = useAuth();
   const navigate = useNavigate();
   const [allUsers, setAllUsers] = useState<UserDto[]>([]);
   const [followedIds, setFollowedIds] = useState<Set<number>>(new Set());
@@ -66,7 +66,7 @@ export function ProfilePage() {
     }
   };
 
-  const otherUsers = allUsers.filter((u) => u.id !== Number(user?.id));
+  const otherUsers = (allUsers ?? []).filter((u) => u.id !== Number(user?.id));
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -97,6 +97,13 @@ export function ProfilePage() {
               >
                 <Clock className="w-5 h-5 text-muted-foreground" />
                 <span>Historia</span>
+              </button>
+              <button
+                onClick={loginWithGithub}
+                className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
+              >
+                <Github className="w-5 h-5" />
+                <span>Podłącz Githuba!</span>
               </button>
               <button
                 onClick={handleLogout}

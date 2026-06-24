@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Clock, ChevronLeft, ChevronRight, Trophy, Search } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight, Trophy, Search, AlertCircle } from 'lucide-react';
 import { betService } from '../services';
-import type { BetHistoryItem, BetStatus, BetType } from '../types';
+import { useAuth } from '../context';
+import type { BetHistoryItem, BetStatus, BetType, UserWinBetDto, UserScoreBetDto, UserBetPredictionDto } from '../types';
 
 const STATUS_LABELS: Record<BetStatus, string> = {
   WIN: 'Wygrana',
@@ -21,33 +22,97 @@ const TYPE_LABELS: Record<BetType, string> = {
   PREDICTION: 'Predykcja',
 };
 
+const PAGE_SIZE = 10;
+
 type FilterTab = 'ALL' | BetStatus;
 
+function mapWinToHistory(dto: UserWinBetDto): BetHistoryItem {
+  return {
+    id: dto.bet.id,
+    type: 'WIN',
+    gameName: dto.bet.game?.name || dto.bet.name,
+    sport: dto.bet.game?.sport || '',
+    team1: dto.bet.game?.team1 || dto.bet.name,
+    team2: dto.bet.game?.team2 || '',
+    stake: dto.amount / 100,
+    multiplier: dto.multiplyer,
+    status: 'PENDING',
+    date: dto.bet.stopDate,
+    payout: 0,
+  };
+}
+
+function mapScoreToHistory(dto: UserScoreBetDto): BetHistoryItem {
+  return {
+    id: dto.bet.id,
+    type: 'SCORE',
+    gameName: dto.bet.game?.name || dto.bet.name,
+    sport: dto.bet.game?.sport || '',
+    team1: dto.bet.game?.team1 || dto.bet.name,
+    team2: dto.bet.game?.team2 || '',
+    stake: dto.ammount / 100,
+    multiplier: dto.multiplyer,
+    status: 'PENDING',
+    date: dto.bet.stopDate,
+    payout: 0,
+  };
+}
+
+function mapPredictionToHistory(dto: UserBetPredictionDto): BetHistoryItem {
+  return {
+    id: dto.bet.id,
+    type: 'PREDICTION',
+    gameName: dto.bet.name,
+    sport: '',
+    team1: dto.bet.name,
+    team2: '',
+    stake: dto.amount / 100,
+    multiplier: dto.bet.currentMultiplier,
+    status: 'PENDING',
+    date: dto.bet.stopDate,
+    payout: 0,
+  };
+}
+
 export function HistoryBetPage() {
+  const { user } = useAuth();
+  const userId = user?.id ? Number(user.id) : undefined;
   const [items, setItems] = useState<BetHistoryItem[]>([]);
   const [filter, setFilter] = useState<FilterTab>('ALL');
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    betService.getHistory(page, 10)
-      .then((res) => {
-        setItems(res.content.map((item) => ({
-          ...item,
-          stake: item.stake / 100,
-          payout: item.payout / 100,
-        })));
-        setTotalPages(res.totalPages);
+    setApiError(false);
+
+    const emptyPage = { content: [] as UserWinBetDto[], totalPages: 0, totalElements: 0, number: 0, size: 0, sort: null as any, pageable: null as any, first: true, last: true, numberOfElements: 0, empty: true };
+
+    Promise.all([
+      betService.getWinHistory(0, 20, userId).catch(() => emptyPage),
+      betService.getScoreHistory(0, 20, userId).catch(() => emptyPage),
+      betService.getPredictionHistory(0, 20, userId).catch(() => emptyPage),
+    ])
+      .then(([winRes, scoreRes, predictionRes]) => {
+        const all = [
+          ...winRes.content.map(mapWinToHistory),
+          ...scoreRes.content.map(mapScoreToHistory),
+          ...predictionRes.content.map(mapPredictionToHistory),
+        ];
+        all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setItems(all);
       })
       .catch(() => {
-        // Fallback to empty
+        setApiError(true);
       })
       .finally(() => setLoading(false));
-  }, [page]);
+  }, [userId]);
 
   const filtered = filter === 'ALL' ? items : items.filter((i) => i.status === filter);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const paged = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -78,6 +143,12 @@ export function HistoryBetPage() {
             <div className="animate-spin w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full mr-3" />
             Ładowanie...
           </div>
+        ) : apiError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <AlertCircle className="w-12 h-12 mb-3 opacity-50" />
+            <p className="font-medium">Historia zakładów jest tymczasowo niedostępna</p>
+            <p className="text-sm mt-1">Spróbuj ponownie później</p>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Search className="w-12 h-12 mb-3 opacity-50" />
@@ -85,8 +156,8 @@ export function HistoryBetPage() {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {filtered.map((bet) => (
-              <div key={bet.id} className="p-4 hover:bg-muted/50 transition">
+            {paged.map((bet) => (
+              <div key={`${bet.type}-${bet.id}`} className="p-4 hover:bg-muted/50 transition">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{bet.team1} vs {bet.team2}</div>
@@ -129,18 +200,18 @@ export function HistoryBetPage() {
           <div className="flex items-center justify-between p-4 border-t border-border">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
+              disabled={currentPage === 0}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm hover:bg-muted transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
               Poprzednia
             </button>
             <span className="text-sm text-muted-foreground">
-              Strona {page + 1} z {totalPages}
+              Strona {currentPage + 1} z {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => p + 1)}
-              disabled={page >= totalPages - 1}
+              disabled={currentPage >= totalPages - 1}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm hover:bg-muted transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Następna

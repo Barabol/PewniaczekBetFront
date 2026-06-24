@@ -1,12 +1,11 @@
-import { CreditCard, Landmark, ExternalLink, Bug } from 'lucide-react';
+import { CreditCard, Landmark, ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
 import { paymentService } from '../services';
 import { ApiError } from '../services';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
-import { API_ENDPOINTS } from '../constants';
-import { apiClient } from '../services/apiClient';
+import { PAYMENT_LIMITS } from '../constants';
 
 export function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
@@ -28,30 +27,22 @@ export function WalletPage() {
 
   const handlePayment = async () => {
     const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum < 10) {
-      toast.error('Podaj prawidłową kwotę');
+    if (isNaN(amountNum) || amountNum < PAYMENT_LIMITS.MIN_AMOUNT) {
+      toast.error(`Minimalna kwota: ${PAYMENT_LIMITS.MIN_AMOUNT} PLN`);
+      return;
+    }
+    if (amountNum > PAYMENT_LIMITS.MAX_AMOUNT) {
+      toast.error(`Maksymalna kwota: ${PAYMENT_LIMITS.MAX_AMOUNT} PLN`);
       return;
     }
     setLoading(true);
     try {
       const amountInGroszy = Math.round(amountNum * 100);
-      console.log('[WALLET DEBUG] Payment request:', {
-        amount: amountNum,
-        amountInGroszy,
-        timestamp: new Date().toISOString()
-      });
-      
+
       const result = await paymentService.send(amountInGroszy);
-      console.log('[WALLET DEBUG] Payment response:', result);
-      
       if (result.url) {
-        console.log('[WALLET DEBUG] Redirecting to:', result.url);
-        window.location.href = result.url;
-      } else {
-        console.log('[WALLET DEBUG] No URL received, showing success message');
-        await refreshUser();
-        toast.success('Płatność została zrealizowana');
-        setAmount('');
+        window.open(result.url, '_blank');
+        toast.info('Otwarto nową kartę z płatnością Stripe. Po zakończeniu wróć tutaj.');
       }
     } catch (err) {
       console.error('[WALLET DEBUG] Payment error:', err);
@@ -120,7 +111,7 @@ export function WalletPage() {
               />
               {amount && parseFloat(amount) > 0 && (
                 <div className="text-xs text-muted-foreground mt-1">
-                  {parseFloat(amount) >= 10 ? '' : 'Minimalna wpłata: 10 PLN'}
+                  <span>{PAYMENT_LIMITS.MIN_AMOUNT}–{PAYMENT_LIMITS.MAX_AMOUNT} PLN</span>
                 </div>
               )}
             </div>
@@ -153,7 +144,7 @@ export function WalletPage() {
 
             <button
               onClick={handlePayment}
-              disabled={loading || !amount || parseFloat(amount) < 10}
+              disabled={loading || !amount || parseFloat(amount) < PAYMENT_LIMITS.MIN_AMOUNT || parseFloat(amount) > PAYMENT_LIMITS.MAX_AMOUNT}
               className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Przetwarzanie...' : activeTab === 'deposit' ? 'Wpłać środki' : 'Wypłać środki'}
@@ -161,8 +152,8 @@ export function WalletPage() {
 
             <p className="text-xs text-muted-foreground mt-3 text-center">
               {activeTab === 'deposit'
-                ? 'Minimalna wpłata: 10 PLN'
-                : 'Minimalna wypłata: 20 PLN'}
+                ? `${PAYMENT_LIMITS.MIN_AMOUNT}–${PAYMENT_LIMITS.MAX_AMOUNT} PLN`
+                : `Minimalna wypłata: 20 PLN`}
             </p>
           </div>
         </div>

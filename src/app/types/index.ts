@@ -49,6 +49,8 @@ export interface PredictionBetDto {
   stopDate: string;
   trueBets: number;
   falseBets: number;
+  trueBetsAmount: number;
+  falseBetsAmount: number;
   pot: number;
   endedWith: boolean;
 }
@@ -116,6 +118,86 @@ export interface PageScoreBetDto {
   totalPages: number;
   size: number;
   content: ScoreBetDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface PageUserDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface UserWinBetDto {
+  user: UserDto;
+  bet: WinBetDto;
+  team: string;
+  multiplyer: number;
+  amount: number;
+}
+
+export interface PageUserWinBetDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserWinBetDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface UserScoreBetDto {
+  user: UserDto;
+  bet: ScoreBetDto;
+  team1Score: number;
+  team2Score: number;
+  multiplyer: number;
+  ammount: number;
+}
+
+export interface PageUserScoreBetDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserScoreBetDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface UserBetPredictionDto {
+  user: UserDto;
+  bet: PredictionBetDto;
+  prediction: boolean;
+  amount: number;
+}
+
+export interface PageUserBetPredictionDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: UserBetPredictionDto[];
   number: number;
   sort: SortObject;
   pageable: PageableObject;

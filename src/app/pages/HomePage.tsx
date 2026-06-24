@@ -43,9 +43,11 @@ export function HomePage() {
 
   useEffect(() => {
     betService.getWinCurrent(undefined, 0, 10).then((page) => {
-      setMatches(page.content.map(mapWinBetToMatch));
-    }).catch(() => {
-      // Fallback to empty
+      if (page?.content) {
+        setMatches(page.content.map(mapWinBetToMatch));
+      }
+    }).catch((err) => {
+      console.error('[HOMEPAGE] Failed to load bets:', err);
     });
   }, []);
 

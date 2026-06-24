@@ -60,7 +60,6 @@ export function MainLayout({ children }: MainLayoutProps) {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><button onClick={() => handleNavigate('home')} className="hover:text-foreground transition">Sport</button></li>
                 <li><button onClick={() => handleNavigate('live')} className="hover:text-foreground transition">Live</button></li>
-                <li><button onClick={() => handleNavigate('esports')} className="hover:text-foreground transition">E-sport</button></li>
               </ul>
             </div>
             <div>

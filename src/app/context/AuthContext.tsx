@@ -1,15 +1,18 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
 import type { User } from '../types';
 import { userService } from '../services';
+import { API_ENDPOINTS } from '../constants';
 
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
+  isAuthLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, surname: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   updateBalance: (amount: number) => void;
+  loginWithGithub: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +35,7 @@ function mapUserDto(dto: import('../types').UserDto): User {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const login = async (email: string, password: string) => {
     const dto = await userService.login(email, password);
@@ -66,16 +70,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGithub = () => {
+    window.location.href = `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.OATH.GITHUB_INITIATE}`;
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    if (code) {
+      const callbackUrl = `${API_ENDPOINTS.OATH.GITHUB_CALLBACK}?code=${code}`;
+      window.location.href = `${API_ENDPOINTS.BASE_URL}${callbackUrl}`;
+      return;
+    }
+
+    refreshUser().finally(() => setIsAuthLoading(false));
+  }, [refreshUser]);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoggedIn: !!user,
+        isAuthLoading,
         login,
         register,
         logout,
         refreshUser,
         updateBalance,
+        loginWithGithub,
       }}
     >
       {children}
