@@ -8,9 +8,10 @@ interface HeaderProps {
   onThemeToggle: () => void;
   isLoggedIn: boolean;
   balance: number;
+  isAdmin?: boolean;
 }
 
-export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLoggedIn, balance }: HeaderProps) {
+export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLoggedIn, balance, isAdmin = false }: HeaderProps) {
   return (
     <header className="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4">
@@ -34,12 +35,22 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
               Live
             </button>
             {isLoggedIn && (
-              <button
-                onClick={() => onNavigate('history')}
-                className={`hover:text-green-200 transition ${currentPage === 'history' ? 'border-b-2 border-white' : ''}`}
-              >
-                Historia
-              </button>
+              <>
+                <button
+                  onClick={() => onNavigate('history')}
+                  className={`hover:text-green-200 transition ${currentPage === 'history' ? 'border-b-2 border-white' : ''}`}
+                >
+                  Historia
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => onNavigate('admin')}
+                    className={`hover:text-green-200 transition ${currentPage === 'admin' ? 'border-b-2 border-white' : ''}`}
+                  >
+                    Admin
+                  </button>
+                )}
+              </>
             )}
           </nav>
 

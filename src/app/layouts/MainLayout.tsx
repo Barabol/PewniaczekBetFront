@@ -32,6 +32,11 @@ export function MainLayout({ children }: MainLayoutProps) {
         onThemeToggle={toggleTheme}
         isLoggedIn={isLoggedIn}
         balance={user?.balance || 0}
+        isAdmin={
+          user?.accountTypeId === 3 ||
+          user?.name?.toLowerCase().includes('admin') ||
+          user?.surname?.toLowerCase().includes('admin')
+        }
       />
 
       <main>{children}</main>

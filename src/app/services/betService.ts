@@ -14,6 +14,7 @@ import type {
   PageUserScoreBetDto,
   PageUserBetPredictionDto,
   SportListDto,
+  GameScoreChangeDto,
 } from '../types';
 
 export const betService = {
@@ -67,4 +68,19 @@ export const betService = {
 
   getPredictionHistory: (page = 0, pageSize = 10, user?: number, findEnded?: boolean) =>
     apiClient.get<PageUserBetPredictionDto>(API_ENDPOINTS.BET_HISTORY_PREDICTION, { page, pageSize, user, findEnded }),
+
+  adminAddWinBet: (dto: WinBetDto) =>
+    apiClient.post<string>(API_ENDPOINTS.WORKER.WIN_ADD, dto),
+
+  adminAddScoreBet: (dto: ScoreBetDto) =>
+    apiClient.post<string>(API_ENDPOINTS.WORKER.SCORE_ADD, dto),
+
+  adminAddPredictionBet: (dto: PredictionBetDto) =>
+    apiClient.post<string>(API_ENDPOINTS.WORKER.PREDICTION_ADD, dto),
+
+  adminEndPredictionBet: (betId: number, value: boolean) =>
+    apiClient.post<string>(`${API_ENDPOINTS.WORKER.PREDICTION_END}?betId=${betId}&value=${value}`),
+
+  adminUpdateGameScore: (dto: GameScoreChangeDto) =>
+    apiClient.post<string>(API_ENDPOINTS.WORKER.GAME_UPDATE, dto),
 };

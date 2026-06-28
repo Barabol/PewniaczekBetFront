@@ -24,6 +24,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   WALLET: '/wallet',
   HISTORY: '/history',
+  ADMIN: '/admin',
 } as const;
 
 export const STORAGE_KEYS = {
@@ -62,6 +63,13 @@ export const API_ENDPOINTS = {
     PREDICTION_CURRENT: '/api/bet/prediction/curent',
     PREDICTION_ALL: '/api/bet/prediction/all',
     PREDICTION_END: '/api/bet/prediction/end', // Added endpoint to end prediction bets
+  },
+  WORKER: {
+    WIN_ADD: '/api/worker/win/add',
+    SCORE_ADD: '/api/worker/score/add',
+    PREDICTION_ADD: '/api/worker/prediction/add',
+    PREDICTION_END: '/api/worker/prediction/end',
+    GAME_UPDATE: '/api/worker/game/update',
   },
   BET_HISTORY: '/api/bet/history',
   BET_HISTORY_WIN: '/api/bet/win/history',

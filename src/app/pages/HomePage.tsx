@@ -45,21 +45,50 @@ export function HomePage() {
 
   useEffect(() => {
     setLoading(true);
-    betService.getWinCurrent(selectedSport, 0, 10)
-      .then((page) => {
-        if (page?.content) {
-          setMatches(page.content.map(mapWinBetToMatch));
-        } else {
+    if (selectedSport === undefined) {
+      // Fetch all sports list first, then fetch bets for each sport individually
+      // to isolate and bypass any 500 errors caused by corrupt data in specific sports (e.g. ping-pong)
+      betService.getWinSports()
+        .then((sportsList) => {
+          const promises = (sportsList || []).map((s) =>
+            betService.getWinCurrent(s.sportName, 0, 10)
+              .then((page) => page?.content || [])
+              .catch((err) => {
+                console.error(`[HOMEPAGE] Failed to load bets for sport ${s.sportName}:`, err);
+                return [];
+              })
+          );
+          return Promise.all(promises);
+        })
+        .then((results) => {
+          const allContent = results.flat();
+          setMatches(allContent.map(mapWinBetToMatch));
+        })
+        .catch((err) => {
+          console.error('[HOMEPAGE] Failed to load all bets:', err);
           setMatches([]);
-        }
-      })
-      .catch((err) => {
-        console.error('[HOMEPAGE] Failed to load bets:', err);
-        setMatches([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      // Fetch bets for the single selected sport category
+      betService.getWinCurrent(selectedSport, 0, 10)
+        .then((page) => {
+          if (page?.content) {
+            setMatches(page.content.map(mapWinBetToMatch));
+          } else {
+            setMatches([]);
+          }
+        })
+        .catch((err) => {
+          console.error('[HOMEPAGE] Failed to load bets:', err);
+          setMatches([]);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
   }, [selectedSport]);
 
   return (

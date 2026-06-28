@@ -295,3 +295,10 @@ export interface SportListDto {
   count: number;
 }
 
+export interface GameScoreChangeDto {
+  gameId: number;
+  team1Score: number;
+  team2Score: number;
+}
+
+

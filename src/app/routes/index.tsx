@@ -7,6 +7,7 @@ import { LoginPage } from '../pages/LoginPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { WalletPage } from '../pages/WalletPage';
 import { HistoryBetPage } from '../pages/HistoryBetPage';
+import { AdminPage } from '../pages/AdminPage';
 
 export function AppRoutes() {
   return (
@@ -36,6 +37,14 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <HistoryBetPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminPage />
           </ProtectedRoute>
         }
       />
