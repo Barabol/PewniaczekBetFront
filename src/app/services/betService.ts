@@ -13,6 +13,7 @@ import type {
   PageUserWinBetDto,
   PageUserScoreBetDto,
   PageUserBetPredictionDto,
+  SportListDto,
 } from '../types';
 
 export const betService = {
@@ -27,6 +28,9 @@ export const betService = {
 
   getWinAll: (sport?: string, page = 0, pageSize = 5) =>
     apiClient.get<PageWinBetDto>(API_ENDPOINTS.BET.WIN_ALL, { sport, page, pageSize }),
+
+  getWinSports: () =>
+    apiClient.get<SportListDto[]>(API_ENDPOINTS.BET.WIN_SPORTS),
 
   placeScoreBet: (dto: ScoreBetPlaceDto) =>
     apiClient.post<string>(API_ENDPOINTS.BET.SCORE_PLACE, dto),

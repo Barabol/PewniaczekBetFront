@@ -51,10 +51,12 @@ export const API_ENDPOINTS = {
     WIN_ADD: '/api/bet/win/add',
     WIN_CURRENT: '/api/bet/win/curent', // Corrected to /api/bet/win/curent
     WIN_ALL: '/api/bet/win/all',
+    WIN_SPORTS: '/api/bet/win/sports',
     SCORE_PLACE: '/api/bet/score/place',
     SCORE_ADD: '/api/bet/score/add',
     SCORE_CURRENT: '/api/bet/score/curent',
     SCORE_ALL: '/api/bet/score/all',
+    SCORE_SPORTS: '/api/bet/score/sports',
     PREDICTION_PLACE: '/api/bet/prediction/place',
     PREDICTION_ADD: '/api/bet/prediction/add',
     PREDICTION_CURRENT: '/api/bet/prediction/curent',

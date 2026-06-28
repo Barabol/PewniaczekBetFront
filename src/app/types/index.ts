@@ -289,3 +289,9 @@ export interface BetHistoryItem {
   date: string;
   payout: number;
 }
+
+export interface SportListDto {
+  sportName: string;
+  count: number;
+}
+

@@ -25,12 +25,12 @@ export function ProfilePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [users, followedPage] = await Promise.all([
-          userService.getAll(),
+        const [usersPage, followedPage] = await Promise.all([
+          userService.getAll(0, 50),
           userService.getFollowed(0, 50),
         ]);
-        setAllUsers(users);
-        setFollowedIds(new Set(followedPage.content.map((u) => u.id)));
+        setAllUsers(usersPage?.content || []);
+        setFollowedIds(new Set((followedPage?.content || []).map((u) => u.id)));
       } catch {
         toast.error('Nie udało się załadować listy użytkowników');
       } finally {
@@ -125,7 +125,7 @@ export function ProfilePage() {
                 <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
                   <div className="text-sm text-muted-foreground">Saldo</div>
-                  <div className="font-bold text-green-600">{user?.balance.toFixed(2) || '0.00'} PLN</div>
+                  <div className="font-bold text-green-600">{(user?.balance ?? 0).toFixed(2)} PLN</div>
                 </div>
               </div>
 
@@ -133,7 +133,7 @@ export function ProfilePage() {
                 <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
                   <div className="text-sm text-muted-foreground">Freebet</div>
-                  <div>{user?.freeBetBalance.toFixed(2) || '0.00'} PLN</div>
+                  <div>{(user?.freeBetBalance ?? 0).toFixed(2)} PLN</div>
                 </div>
               </div>
 
@@ -160,11 +160,11 @@ export function ProfilePage() {
                 <div className="text-sm text-muted-foreground mt-1">Przegrane</div>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{user?.winsAmount.toFixed(0) || '0'}</div>
+                <div className="text-2xl font-bold text-green-600">{(user?.winsAmount ?? 0).toFixed(0)}</div>
                 <div className="text-sm text-muted-foreground mt-1">Wygrane (PLN)</div>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
-                <div className="text-2xl font-bold text-destructive">{user?.lossesAmount.toFixed(0) || '0'}</div>
+                <div className="text-2xl font-bold text-destructive">{(user?.lossesAmount ?? 0).toFixed(0)}</div>
                 <div className="text-sm text-muted-foreground mt-1">Przegrane (PLN)</div>
               </div>
             </div>
@@ -204,7 +204,7 @@ export function ProfilePage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center text-white font-bold text-sm">
-                          {u.name.charAt(0)}{u.surname.charAt(0)}
+                          {(u.name || '').charAt(0)}{(u.surname || '').charAt(0)}
                         </div>
                         <div>
                           <div className="font-medium text-sm">{u.name} {u.surname}</div>

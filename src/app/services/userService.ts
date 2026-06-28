@@ -15,8 +15,8 @@ export const userService = {
   getDetails: (userId?: number) =>
     apiClient.get<UserDto>(API_ENDPOINTS.USER.DETAILS, userId ? { userId } : undefined),
 
-  getAll: () =>
-    apiClient.get<UserDto[]>(API_ENDPOINTS.USER.ALL),
+  getAll: (page = 0, pageSize = 50) =>
+    apiClient.get<PageUserDto>(API_ENDPOINTS.USER.ALL, { page, pageSize }),
 
   toggleVisibility: () =>
     apiClient.get<UserDto>(API_ENDPOINTS.USER.TOGGLE_VISIBILITY),
