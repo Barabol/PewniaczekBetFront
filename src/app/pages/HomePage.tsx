@@ -40,21 +40,32 @@ function mapWinBetToMatch(bet: WinBetDto) {
 export function HomePage() {
   const { bets, addBet, removeBet, clearAllBets } = useBetting();
   const [matches, setMatches] = useState<ReturnType<typeof mapWinBetToMatch>[]>([]);
+  const [selectedSport, setSelectedSport] = useState<string | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    betService.getWinCurrent(undefined, 0, 10).then((page) => {
-      if (page?.content) {
-        setMatches(page.content.map(mapWinBetToMatch));
-      }
-    }).catch((err) => {
-      console.error('[HOMEPAGE] Failed to load bets:', err);
-    });
-  }, []);
+    setLoading(true);
+    betService.getWinCurrent(selectedSport, 0, 10)
+      .then((page) => {
+        if (page?.content) {
+          setMatches(page.content.map(mapWinBetToMatch));
+        } else {
+          setMatches([]);
+        }
+      })
+      .catch((err) => {
+        console.error('[HOMEPAGE] Failed to load bets:', err);
+        setMatches([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [selectedSport]);
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="mb-6">
-        <SportCategories />
+        <SportCategories selectedSport={selectedSport} onSelectSport={setSelectedSport} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -76,20 +87,55 @@ export function HomePage() {
               <h2>Polecane zakłady</h2>
             </div>
             <div className="grid gap-4">
-              {matches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  league={match.league}
-                  homeTeam={match.homeTeam}
-                  awayTeam={match.awayTeam}
-                  time={match.time}
-                  odds={match.odds}
-                  isLive={match.isLive}
-                  betId={match.betId}
-                  betType={match.betType}
-                  onAddToBet={addBet}
-                />
-              ))}
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-card rounded-lg shadow-md overflow-hidden border border-border animate-pulse">
+                    <div className="bg-muted px-4 py-2 flex items-center justify-between border-b border-border h-9">
+                      <div className="h-4 bg-muted-foreground/20 rounded w-1/4" />
+                      <div className="h-4 bg-muted-foreground/20 rounded w-16" />
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-3 gap-3 mb-3">
+                        <div className="col-span-2 space-y-3">
+                          <div className="h-5 bg-muted-foreground/20 rounded w-2/3" />
+                          <div className="h-5 bg-muted-foreground/20 rounded w-1/2" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 mt-4">
+                        {Array.from({ length: 3 }).map((_, j) => (
+                          <div key={j} className="p-3 rounded-lg border border-border h-16 bg-muted/30 flex flex-col items-center justify-center space-y-1">
+                            <div className="h-3 bg-muted-foreground/20 rounded w-4" />
+                            <div className="h-4 bg-muted-foreground/20 rounded w-8" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="px-4 py-2 bg-muted border-t border-border h-9">
+                      <div className="h-4 bg-muted-foreground/20 rounded w-1/3" />
+                    </div>
+                  </div>
+                ))
+              ) : matches.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
+                  <p className="text-lg font-medium">Brak dostępnych zakładów dla tego sportu</p>
+                  <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
+                </div>
+              ) : (
+                matches.map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    league={match.league}
+                    homeTeam={match.homeTeam}
+                    awayTeam={match.awayTeam}
+                    time={match.time}
+                    odds={match.odds}
+                    isLive={match.isLive}
+                    betId={match.betId}
+                    betType={match.betType}
+                    onAddToBet={addBet}
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>

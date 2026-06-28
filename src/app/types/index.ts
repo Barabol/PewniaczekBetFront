@@ -225,6 +225,28 @@ export interface RedirectView {
   url?: string;
 }
 
+export interface PaymentDto {
+  sid: string;
+  amount: number;
+  description: string;
+  paymentDate: string;
+  status: string;
+}
+
+export interface PagePaymentDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: PaymentDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
 // ========== UI Types ==========
 
 export interface User {
@@ -254,6 +276,7 @@ export type BetType = 'WIN' | 'SCORE' | 'PREDICTION';
 export type BetStatus = 'WIN' | 'LOSE' | 'PENDING';
 
 export interface BetHistoryItem {
+  uniqueId: string;
   id: number;
   type: BetType;
   gameName: string;

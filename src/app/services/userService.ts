@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import { API_ENDPOINTS } from '../constants';
-import type { UserDto, PageUserDto } from '../types';
+import type { UserDto, PageUserDto, PagePaymentDto } from '../types';
 
 export const userService = {
   login: (email: string, password: string) =>
@@ -32,4 +32,7 @@ export const userService = {
 
   getFollowed: (page = 0, pageSize = 5) =>
     apiClient.get<PageUserDto>(API_ENDPOINTS.USER.FOLLOWED, { page, pageSize }),
+
+  getPayments: (page = 0, pageSize = 5) =>
+    apiClient.get<PagePaymentDto>(API_ENDPOINTS.USER.PAYMENTS, { page, pageSize }),
 };

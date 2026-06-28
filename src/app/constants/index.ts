@@ -41,14 +41,15 @@ export const API_ENDPOINTS = {
     ALL: '/api/user/all',
     TOGGLE_VISIBILITY: '/api/user/toggleVisibility',
     FOLLOW: '/api/user/follow',
-    UNFOLLOW: '/api/user/unfollow',
+    UNFOLLOW: '/api/user/follow', // Corrected path to match Swagger (DELETE /api/user/follow)
     FOLLOWERS: '/api/user/followers',
     FOLLOWED: '/api/user/followed',
+    PAYMENTS: '/api/user/payments', // Added payments endpoint
   },
   BET: {
     WIN_PLACE: '/api/bet/win/place',
     WIN_ADD: '/api/bet/win/add',
-    WIN_CURRENT: '/api/bet/win/all',
+    WIN_CURRENT: '/api/bet/win/curent', // Corrected to /api/bet/win/curent
     WIN_ALL: '/api/bet/win/all',
     SCORE_PLACE: '/api/bet/score/place',
     SCORE_ADD: '/api/bet/score/add',
@@ -58,6 +59,7 @@ export const API_ENDPOINTS = {
     PREDICTION_ADD: '/api/bet/prediction/add',
     PREDICTION_CURRENT: '/api/bet/prediction/curent',
     PREDICTION_ALL: '/api/bet/prediction/all',
+    PREDICTION_END: '/api/bet/prediction/end', // Added endpoint to end prediction bets
   },
   BET_HISTORY: '/api/bet/history',
   BET_HISTORY_WIN: '/api/bet/win/history',
@@ -70,9 +72,12 @@ export const API_ENDPOINTS = {
     REDIRECT: '/pay/redirect',
   },
   OATH: {
-    GITHUB_INITIATE: '/social/github/login',
-    GITHUB_CALLBACK: '/social/github/callback',
+    GITHUB_INITIATE: '/social/github/initiate', // Connect GitHub account
+    GITHUB_INITIATE_LOGIN: '/social/github/login', // Login via GitHub
+    GITHUB_CALLBACK: '/social/github/callback', // GitHub callback for binding
+    GITHUB_CALLBACK_LOGIN: '/social/github/callback/login', // GitHub callback for login
     GITHUB_DELETE: '/social/github',
     ALL: '/social/all',
   },
 } as const;
+

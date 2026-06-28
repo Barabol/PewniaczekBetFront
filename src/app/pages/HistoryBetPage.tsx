@@ -24,53 +24,92 @@ const TYPE_LABELS: Record<BetType, string> = {
 
 const PAGE_SIZE = 10;
 
-type FilterTab = 'ALL' | BetStatus;
 
-function mapWinToHistory(dto: UserWinBetDto): BetHistoryItem {
+
+function mapWinToHistory(dto: UserWinBetDto, isEnded: boolean): BetHistoryItem {
+  let status: BetStatus = 'PENDING';
+  if (isEnded) {
+    const score1 = dto.bet.game?.team1Score ?? 0;
+    const score2 = dto.bet.game?.team2Score ?? 0;
+    const isHomeBet = dto.team === 'true' || dto.team === 'TEAM1' || dto.team === 'HOME' || dto.team === dto.bet.game?.team1 || (dto.team as any) === true;
+
+    if ((score1 > score2 && isHomeBet) || (score2 > score1 && !isHomeBet)) {
+      status = 'WIN';
+    } else {
+      status = 'LOSE';
+    }
+  }
+
+  const stake = dto.amount / 100;
   return {
+    uniqueId: `win-${dto.bet.id}-${dto.amount}-${dto.team}-${isEnded ? 'ended' : 'pending'}-${Math.random()}`,
     id: dto.bet.id,
     type: 'WIN',
     gameName: dto.bet.game?.name || dto.bet.name,
     sport: dto.bet.game?.sport || '',
     team1: dto.bet.game?.team1 || dto.bet.name,
     team2: dto.bet.game?.team2 || '',
-    stake: dto.amount / 100,
+    stake,
     multiplier: dto.multiplyer,
-    status: 'PENDING',
+    status,
     date: dto.bet.stopDate,
-    payout: 0,
+    payout: status === 'WIN' ? stake * dto.multiplyer : 0,
   };
 }
 
-function mapScoreToHistory(dto: UserScoreBetDto): BetHistoryItem {
+function mapScoreToHistory(dto: UserScoreBetDto, isEnded: boolean): BetHistoryItem {
+  let status: BetStatus = 'PENDING';
+  if (isEnded) {
+    const score1 = dto.bet.game?.team1Score ?? 0;
+    const score2 = dto.bet.game?.team2Score ?? 0;
+    if (dto.team1Score === score1 && dto.team2Score === score2) {
+      status = 'WIN';
+    } else {
+      status = 'LOSE';
+    }
+  }
+
+  const stake = dto.ammount / 100;
   return {
+    uniqueId: `score-${dto.bet.id}-${dto.ammount}-${dto.team1Score}-${dto.team2Score}-${isEnded ? 'ended' : 'pending'}-${Math.random()}`,
     id: dto.bet.id,
     type: 'SCORE',
     gameName: dto.bet.game?.name || dto.bet.name,
     sport: dto.bet.game?.sport || '',
     team1: dto.bet.game?.team1 || dto.bet.name,
     team2: dto.bet.game?.team2 || '',
-    stake: dto.ammount / 100,
+    stake,
     multiplier: dto.multiplyer,
-    status: 'PENDING',
+    status,
     date: dto.bet.stopDate,
-    payout: 0,
+    payout: status === 'WIN' ? stake * dto.multiplyer : 0,
   };
 }
 
-function mapPredictionToHistory(dto: UserBetPredictionDto): BetHistoryItem {
+function mapPredictionToHistory(dto: UserBetPredictionDto, isEnded: boolean): BetHistoryItem {
+  let status: BetStatus = 'PENDING';
+  if (isEnded) {
+    if (dto.prediction === dto.bet.endedWith) {
+      status = 'WIN';
+    } else {
+      status = 'LOSE';
+    }
+  }
+
+  const stake = dto.amount / 100;
   return {
+    uniqueId: `pred-${dto.bet.id}-${dto.amount}-${dto.prediction}-${isEnded ? 'ended' : 'pending'}-${Math.random()}`,
     id: dto.bet.id,
     type: 'PREDICTION',
     gameName: dto.bet.name,
     sport: '',
     team1: dto.bet.name,
     team2: '',
-    stake: dto.amount / 100,
+    stake,
     multiplier: dto.bet.currentMultiplier,
-    status: 'PENDING',
+    status,
     date: dto.bet.stopDate,
-    payout: 0,
+    payout: status === 'WIN' ? stake * dto.bet.currentMultiplier : 0,
   };
 }
 
@@ -78,7 +117,7 @@ export function HistoryBetPage() {
   const { user } = useAuth();
   const userId = user?.id ? Number(user.id) : undefined;
   const [items, setItems] = useState<BetHistoryItem[]>([]);
-  const [filter, setFilter] = useState<FilterTab>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | BetStatus>('ALL');
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(false);
@@ -87,21 +126,51 @@ export function HistoryBetPage() {
     setLoading(true);
     setApiError(false);
 
-    const emptyPage = { content: [] as UserWinBetDto[], totalPages: 0, totalElements: 0, number: 0, size: 0, sort: null as any, pageable: null as any, first: true, last: true, numberOfElements: 0, empty: true };
+    const emptyPage = { content: [] as any[], totalPages: 0, totalElements: 0, number: 0, size: 0, sort: null as any, pageable: null as any, first: true, last: true, numberOfElements: 0, empty: true };
 
     Promise.all([
-      betService.getWinHistory(0, 20, userId).catch(() => emptyPage),
-      betService.getScoreHistory(0, 20, userId).catch(() => emptyPage),
-      betService.getPredictionHistory(0, 20, userId).catch(() => emptyPage),
+      // Fetch ended bets
+      betService.getWinHistory(0, 50, userId, undefined, true).catch(() => emptyPage),
+      betService.getScoreHistory(0, 50, userId, undefined, true).catch(() => emptyPage),
+      betService.getPredictionHistory(0, 50, userId, true).catch(() => emptyPage),
+      // Fetch pending bets
+      betService.getWinHistory(0, 50, userId, undefined, false).catch(() => emptyPage),
+      betService.getScoreHistory(0, 50, userId, undefined, false).catch(() => emptyPage),
+      betService.getPredictionHistory(0, 50, userId, false).catch(() => emptyPage),
     ])
-      .then(([winRes, scoreRes, predictionRes]) => {
+      .then(([winEnded, scoreEnded, predEnded, winPending, scorePending, predPending]) => {
         const all = [
-          ...winRes.content.map(mapWinToHistory),
-          ...scoreRes.content.map(mapScoreToHistory),
-          ...predictionRes.content.map(mapPredictionToHistory),
+          ...winEnded.content.map((item) => mapWinToHistory(item, true)),
+          ...scoreEnded.content.map((item) => mapScoreToHistory(item, true)),
+          ...predEnded.content.map((item) => mapPredictionToHistory(item, true)),
+          ...winPending.content.map((item) => mapWinToHistory(item, false)),
+          ...scorePending.content.map((item) => mapScoreToHistory(item, false)),
+          ...predPending.content.map((item) => mapPredictionToHistory(item, false)),
         ];
-        all.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setItems(all);
+        
+        // Deduplicate items to prevent identical bets from appearing multiple times
+        const deduplicated: BetHistoryItem[] = [];
+        all.forEach((item) => {
+          const duplicateIdx = deduplicated.findIndex((x) => 
+            x.type === item.type && 
+            x.id === item.id && 
+            x.stake === item.stake &&
+            x.multiplier === item.multiplier &&
+            x.date === item.date
+          );
+          
+          if (duplicateIdx === -1) {
+            deduplicated.push(item);
+          } else {
+            // If duplicate found and the existing one is PENDING but new one is resolved (WIN/LOSE), replace it
+            if (deduplicated[duplicateIdx].status === 'PENDING' && item.status !== 'PENDING') {
+              deduplicated[duplicateIdx] = item;
+            }
+          }
+        });
+
+        deduplicated.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setItems(deduplicated);
       })
       .catch(() => {
         setApiError(true);
@@ -109,7 +178,9 @@ export function HistoryBetPage() {
       .finally(() => setLoading(false));
   }, [userId]);
 
-  const filtered = filter === 'ALL' ? items : items.filter((i) => i.status === filter);
+  const filtered = items.filter((item) => {
+    return statusFilter === 'ALL' || item.status === statusFilter;
+  });
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
   const paged = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
@@ -122,12 +193,12 @@ export function HistoryBetPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-6 p-1 bg-muted rounded-lg w-fit">
-        {(['ALL', 'WIN', 'LOSE', 'PENDING'] as FilterTab[]).map((tab) => (
+        {(['ALL', 'WIN', 'LOSE', 'PENDING'] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => { setFilter(tab); setPage(0); }}
+            onClick={() => { setStatusFilter(tab); setPage(0); }}
             className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-              filter === tab
+              statusFilter === tab
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -157,7 +228,7 @@ export function HistoryBetPage() {
         ) : (
           <div className="divide-y divide-border">
             {paged.map((bet) => (
-              <div key={`${bet.type}-${bet.id}`} className="p-4 hover:bg-muted/50 transition">
+              <div key={bet.uniqueId} className="p-4 hover:bg-muted/50 transition">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{bet.team1} vs {bet.team2}</div>

@@ -52,6 +52,9 @@ export const betService = {
   getPredictionAll: (page = 0, pageSize = 5) =>
     apiClient.get<PagePredictionBetDto>(API_ENDPOINTS.BET.PREDICTION_ALL, { page, pageSize }),
 
+  endPredictionBet: (betId: number) =>
+    apiClient.post<string>(`${API_ENDPOINTS.BET.PREDICTION_END}?betId=${betId}`),
+
   getWinHistory: (page = 0, pageSize = 10, user?: number, sport?: string, findEnded?: boolean) =>
     apiClient.get<PageUserWinBetDto>(API_ENDPOINTS.BET_HISTORY_WIN, { page, pageSize, user, sport, findEnded }),
 

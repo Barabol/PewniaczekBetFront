@@ -1,4 +1,4 @@
-import { CreditCard, Landmark, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
 import { paymentService } from '../services';
@@ -10,7 +10,6 @@ import { PAYMENT_LIMITS } from '../constants';
 export function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
   const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank'>('card');
   const [loading, setLoading] = useState(false);
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
@@ -42,7 +41,7 @@ export function WalletPage() {
       const result = await paymentService.send(amountInGroszy);
       if (result.url) {
         window.open(result.url, '_blank');
-        toast.info('Otwarto nową kartę z płatnością Stripe. Po zakończeniu wróć tutaj.');
+        window.close();
       }
     } catch (err) {
       console.error('[WALLET DEBUG] Payment error:', err);
@@ -114,32 +113,6 @@ export function WalletPage() {
                   <span>{PAYMENT_LIMITS.MIN_AMOUNT}–{PAYMENT_LIMITS.MAX_AMOUNT} PLN</span>
                 </div>
               )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm mb-2">Metoda płatności</label>
-              <div className="space-y-2">
-                <button
-                  onClick={() => setPaymentMethod('card')}
-                  className={`w-full flex items-center gap-3 p-3 border rounded-lg transition ${paymentMethod === 'card'
-                    ? 'border-green-600 bg-green-500/10'
-                    : 'border-border hover:border-green-500 hover:bg-green-500/10'
-                  }`}
-                >
-                  <CreditCard className="w-5 h-5 text-muted-foreground" />
-                  <span>Karta kredytowa/debetowa</span>
-                </button>
-                <button
-                  onClick={() => setPaymentMethod('bank')}
-                  className={`w-full flex items-center gap-3 p-3 border rounded-lg transition ${paymentMethod === 'bank'
-                    ? 'border-green-600 bg-green-500/10'
-                    : 'border-border hover:border-green-500 hover:bg-green-500/10'
-                  }`}
-                >
-                  <Landmark className="w-5 h-5 text-muted-foreground" />
-                  <span>Przelew bankowy</span>
-                </button>
-              </div>
             </div>
 
             <button

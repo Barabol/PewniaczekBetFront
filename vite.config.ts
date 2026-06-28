@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
 // ===== ONE LINE TO CHANGE =====
-const API_TARGET = 'https://pulmonary-broadband-taps.ngrok-free.dev'
+const API_TARGET = 'http://172.21.225.41:8080'
 // ===============================
 
 function stripSecureFromCookie(proxyRes: any) {
