@@ -1,17 +1,31 @@
-import { User, Wallet, LogOut, TrendingUp, Clock, UserPlus, UserMinus, Users, Github } from 'lucide-react';
+import { User, Wallet, LogOut, TrendingUp, Clock, UserPlus, UserMinus, Users, Github, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context';
 import { useNavigate } from 'react-router-dom';
-import { userService } from '../services';
+import { userService, oathService } from '../services';
 import { useState, useEffect } from 'react';
-import type { UserDto } from '../types';
+import type { UserDto, OathDto } from '../types';
 import { toast } from 'sonner';
 
 export function ProfilePage() {
-  const { user, logout, refreshUser, loginWithGithub } = useAuth();
+  const { user, logout, refreshUser, connectGithub } = useAuth();
   const navigate = useNavigate();
   const [allUsers, setAllUsers] = useState<UserDto[]>([]);
+  const [socialAccounts, setSocialAccounts] = useState<OathDto[]>([]);
   const [followedIds, setFollowedIds] = useState<Set<number>>(new Set());
+  const [followers, setFollowers] = useState<UserDto[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingFollowers, setLoadingFollowers] = useState(true);
+  const [communityTab, setCommunityTab] = useState<'all' | 'followers'>('all');
+
+  const handleToggleVisibility = async () => {
+    try {
+      await userService.toggleVisibility();
+      toast.success('Zmieniono widoczność profilu');
+      refreshUser();
+    } catch {
+      toast.error('Nie udało się zmienić widoczności profilu');
+    }
+  };
 
   const handleNavigate = (page: string) => {
     navigate(`/${page}`);
@@ -38,7 +52,25 @@ export function ProfilePage() {
       }
     };
     fetchData();
-  }, []);
+
+    const fetchFollowers = async () => {
+      try {
+        const followersPage = await userService.getFollowers(0, 50);
+        setFollowers(followersPage?.content || []);
+      } catch (err) {
+        console.error('Nie udało się pobrać obserwujących:', err);
+      } finally {
+        setLoadingFollowers(false);
+      }
+    };
+
+    if (user?.id) {
+      oathService.getAll(Number(user.id))
+        .then(accounts => setSocialAccounts(accounts))
+        .catch(err => console.error('Nie udało się pobrać połączonych kont:', err));
+      fetchFollowers();
+    }
+  }, [user?.id]);
 
   const handleFollow = async (userId: number) => {
     try {
@@ -65,6 +97,18 @@ export function ProfilePage() {
       toast.error('Nie udało się przestać obserwować użytkownika');
     }
   };
+
+  const handleDisconnectGithub = async () => {
+    try {
+      await oathService.deleteGithub();
+      setSocialAccounts(prev => prev.filter(acc => acc.service.toLowerCase() !== 'github'));
+      toast.success('Konto GitHub zostało odłączone');
+    } catch {
+      toast.error('Nie udało się odłączyć konta GitHub');
+    }
+  };
+
+  const githubAccount = socialAccounts.find(acc => acc.service.toLowerCase() === 'github');
 
   const otherUsers = (allUsers ?? []).filter((u) => u.id !== Number(user?.id));
 
@@ -98,12 +142,47 @@ export function ProfilePage() {
                 <Clock className="w-5 h-5 text-muted-foreground" />
                 <span>Historia</span>
               </button>
+              {githubAccount ? (
+                <button
+                  onClick={handleDisconnectGithub}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 text-destructive transition text-left"
+                >
+                  <Github className="w-5 h-5" />
+                  <div className="flex-1">
+                    <span className="block text-sm font-medium">Odłącz Githuba</span>
+                    <span className="block text-xs opacity-75 font-mono">@{githubAccount.login}</span>
+                  </div>
+                </button>
+              ) : (
+                <button
+                  onClick={connectGithub}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
+                >
+                  <Github className="w-5 h-5" />
+                  <span>Podłącz Githuba!</span>
+                </button>
+              )}
               <button
-                onClick={loginWithGithub}
+                onClick={handleToggleVisibility}
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
               >
-                <Github className="w-5 h-5" />
-                <span>Podłącz Githuba!</span>
+                {user?.public ? (
+                  <>
+                    <Eye className="w-5 h-5 text-green-600" />
+                    <div className="flex-1">
+                      <span className="block text-sm font-medium">Profil: Publiczny</span>
+                      <span className="block text-xs opacity-75">Kliknij, aby ukryć profil</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-5 h-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      <span className="block text-sm font-medium">Profil: Prywatny</span>
+                      <span className="block text-xs opacity-75">Kliknij, aby upublicznić</span>
+                    </div>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleLogout}
@@ -171,66 +250,151 @@ export function ProfilePage() {
           </div>
 
           <div className="bg-card rounded-lg shadow-md p-6 border border-border mt-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-green-600" />
-              <h3>Społeczność</h3>
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-green-600" />
+                <h3 className="text-base font-bold">Społeczność</h3>
+              </div>
+              <div className="flex gap-1 bg-muted p-0.5 rounded-lg text-xs">
+                <button
+                  type="button"
+                  onClick={() => setCommunityTab('all')}
+                  className={`px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                    communityTab === 'all'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Wszyscy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCommunityTab('followers')}
+                  className={`px-2.5 py-1 rounded-md font-medium transition cursor-pointer ${
+                    communityTab === 'followers'
+                      ? 'bg-card text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Obserwujący mnie ({followers.length})
+                </button>
+              </div>
             </div>
 
-            {loadingUsers ? (
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-lg animate-pulse">
-                    <div className="w-10 h-10 rounded-full bg-muted-foreground/20" />
-                    <div className="flex-1">
-                      <div className="h-4 bg-muted-foreground/20 rounded w-1/3 mb-1" />
-                      <div className="h-3 bg-muted-foreground/20 rounded w-1/4" />
+            {communityTab === 'all' ? (
+              loadingUsers ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-lg animate-pulse">
+                      <div className="w-10 h-10 rounded-full bg-muted-foreground/20" />
+                      <div className="flex-1">
+                        <div className="h-4 bg-muted-foreground/20 rounded w-1/3 mb-1" />
+                        <div className="h-3 bg-muted-foreground/20 rounded w-1/4" />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : otherUsers.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Brak innych użytkowników</p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                {otherUsers.map((u) => {
-                  const isFollowed = followedIds.has(u.id);
-                  return (
-                    <div
-                      key={u.id}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center text-white font-bold text-sm">
-                          {(u.name || '').charAt(0)}{(u.surname || '').charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm">{u.name} {u.surname}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {u.wins} wygrane | {u.losses} przegrane
+                  ))}
+                </div>
+              ) : otherUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Brak innych użytkowników</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                  {otherUsers.map((u) => {
+                    const isFollowed = followedIds.has(u.id);
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center text-white font-bold text-sm">
+                            {(u.name || '').charAt(0)}{(u.surname || '').charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{u.name} {u.surname}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {u.wins} wygrane | {u.losses} przegrane
+                            </div>
                           </div>
                         </div>
+                        <button
+                          onClick={() => isFollowed ? handleUnfollow(u.id) : handleFollow(u.id)}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                            isFollowed
+                              ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                              : 'bg-green-600/10 text-green-600 hover:bg-green-600/20'
+                          }`}
+                        >
+                          {isFollowed ? (
+                            <><UserMinus className="w-3.5 h-3.5" /> Obserwujesz</>
+                          ) : (
+                            <><UserPlus className="w-3.5 h-3.5" /> Obserwuj</>
+                          )}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => isFollowed ? handleUnfollow(u.id) : handleFollow(u.id)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                          isFollowed
-                            ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
-                            : 'bg-green-600/10 text-green-600 hover:bg-green-600/20'
-                        }`}
-                      >
-                        {isFollowed ? (
-                          <><UserMinus className="w-3.5 h-3.5" /> Obserwujesz</>
-                        ) : (
-                          <><UserPlus className="w-3.5 h-3.5" /> Obserwuj</>
-                        )}
-                      </button>
+                    );
+                  })}
+                </div>
+              )
+            ) : (
+              loadingFollowers ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-lg animate-pulse">
+                      <div className="w-10 h-10 rounded-full bg-muted-foreground/20" />
+                      <div className="flex-1">
+                        <div className="h-4 bg-muted-foreground/20 rounded w-1/3 mb-1" />
+                        <div className="h-3 bg-muted-foreground/20 rounded w-1/4" />
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              ) : followers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Brak obserwujących</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                  {followers.map((u) => {
+                    const isFollowed = followedIds.has(u.id);
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center text-white font-bold text-sm">
+                            {(u.name || '').charAt(0)}{(u.surname || '').charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{u.name} {u.surname}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {u.wins} wygrane | {u.losses} przegrane
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => isFollowed ? handleUnfollow(u.id) : handleFollow(u.id)}
+                          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                            isFollowed
+                              ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                              : 'bg-green-600/10 text-green-600 hover:bg-green-600/20'
+                          }`}
+                        >
+                          {isFollowed ? (
+                            <><UserMinus className="w-3.5 h-3.5" /> Obserwujesz</>
+                          ) : (
+                            <><UserPlus className="w-3.5 h-3.5" /> Obserwuj back</>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
             )}
           </div>
         </div>

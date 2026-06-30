@@ -301,4 +301,24 @@ export interface GameScoreChangeDto {
   team2Score: number;
 }
 
+export interface LogDto {
+  user: UserDto;
+  log: string;
+  time: string;
+}
+
+export interface PageLogDto {
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  content: LogDto[];
+  number: number;
+  sort: SortObject;
+  pageable: PageableObject;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
 

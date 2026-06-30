@@ -1,11 +1,12 @@
 import { ExternalLink } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context';
-import { paymentService } from '../services';
+import { paymentService, userService } from '../services';
 import { ApiError } from '../services';
 import { toast } from 'sonner';
 import { useSearchParams } from 'react-router-dom';
 import { PAYMENT_LIMITS } from '../constants';
+import type { PaymentDto } from '../types';
 
 export function WalletPage() {
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>('deposit');
@@ -14,14 +15,30 @@ export function WalletPage() {
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
 
+  const [payments, setPayments] = useState<PaymentDto[]>([]);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+
+  const fetchPayments = async () => {
+    try {
+      const res = await userService.getPayments(0, 10);
+      setPayments(res.content || []);
+    } catch (err) {
+      console.error('Nie udało się pobrać historii płatności:', err);
+    } finally {
+      setLoadingPayments(false);
+    }
+  };
+
   useEffect(() => {
     const paymentId = searchParams.get('paymentId');
     if (paymentId) {
       paymentService.redirect(Number(paymentId))
         .then(() => refreshUser())
+        .then(() => fetchPayments())
         .then(() => toast.success('Płatność zakończona pomyślnie'))
         .catch(() => toast.error('Nie udało się przetworzyć płatności'));
     }
+    fetchPayments();
   }, []);
 
   const handlePayment = async () => {
@@ -163,6 +180,7 @@ export function WalletPage() {
                     try {
                       await paymentService.reloadAll();
                       await refreshUser();
+                      await fetchPayments();
                       toast.success('Stan konta został odświeżony');
                     } catch {
                       toast.error('Nie udało się odświeżyć stanu konta');
@@ -174,6 +192,63 @@ export function WalletPage() {
                   Odśwież stan konta
                 </button>
               </div>
+            </div>
+
+            <div className="bg-card rounded-lg shadow-md border border-border mt-6 overflow-hidden">
+              <div className="p-6 border-b border-border">
+                <h3>Historia transakcji</h3>
+              </div>
+
+              {loadingPayments ? (
+                <div className="p-6 text-center text-muted-foreground text-sm">Ładowanie transakcji...</div>
+              ) : payments.length === 0 ? (
+                <div className="p-6 text-center text-muted-foreground text-sm">Brak historii transakcji</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40 text-muted-foreground font-medium">
+                        <th className="py-3 px-4">Opis</th>
+                        <th className="py-3 px-4">Kwota</th>
+                        <th className="py-3 px-4">Data</th>
+                        <th className="py-3 px-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border text-xs">
+                      {payments.map((p) => {
+                        const isPaid = p.status.toLowerCase() === 'paid';
+                        const isUnpaid = p.status.toLowerCase() === 'unpaid';
+                        return (
+                          <tr key={p.sid} className="hover:bg-muted/20 transition">
+                            <td className="py-3 px-4 font-medium text-foreground">{p.description}</td>
+                            <td className="py-3 px-4 font-mono font-semibold text-green-600">
+                              +{(p.amount / 100).toFixed(2)} PLN
+                            </td>
+                            <td className="py-3 px-4 text-muted-foreground">
+                              {new Date(p.paymentDate).toLocaleString('pl-PL')}
+                            </td>
+                            <td className="py-3 px-4">
+                              {isPaid ? (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-green-500/10 text-green-600">
+                                  Zrealizowana
+                                </span>
+                              ) : isUnpaid ? (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-yellow-500/10 text-yellow-600">
+                                  Oczekująca
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-500/10 text-red-500">
+                                  Anulowana
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>

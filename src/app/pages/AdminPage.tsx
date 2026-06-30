@@ -1,12 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Check, Settings, Calendar, TrendingUp, Activity, RefreshCw, Trophy, FileText, CheckCircle, XCircle } from 'lucide-react';
-import { betService } from '../services';
-import type { WinBetDto, ScoreBetDto, PredictionBetDto, GameDto } from '../types';
+import { Plus, Edit, Check, Settings, Calendar, TrendingUp, Activity, RefreshCw, Trophy, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { betService, adminService } from '../services';
+import type { WinBetDto, ScoreBetDto, PredictionBetDto, GameDto, LogDto } from '../types';
 import { toast } from 'sonner';
+import { useAuth } from '../context';
+
+const formatLocalDateTime = (dateStr: string) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const tzOffset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - tzOffset).toISOString().slice(0, 19);
+};
 
 export function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'create-bet' | 'create-prediction' | 'resolve' | 'update-score' | 'list'>('list');
+  const [activeTab, setActiveTab] = useState<'create-bet' | 'create-prediction' | 'resolve' | 'update-score' | 'list' | 'logs'>('list');
   const [loading, setLoading] = useState(false);
+
+  const { user } = useAuth();
+  const isActualAdmin =
+    user?.accountTypeId === 3 ||
+    user?.name?.toLowerCase().includes('admin') ||
+    user?.surname?.toLowerCase().includes('admin');
+
+  // Logs states
+  const [logs, setLogs] = useState<LogDto[]>([]);
+  const [logsPage, setLogsPage] = useState(0);
+  const [logsTotalPages, setLogsTotalPages] = useState(0);
+  const [logsLoading, setLogsLoading] = useState(false);
 
   // Lists of existing bets
   const [winBets, setWinBets] = useState<WinBetDto[]>([]);
@@ -71,9 +91,29 @@ export function AdminPage() {
     }
   };
 
+  const fetchLogs = async (page = 0) => {
+    setLogsLoading(true);
+    try {
+      const res = await adminService.getLogs(page, 10);
+      setLogs(res.content || []);
+      setLogsPage(res.number || 0);
+      setLogsTotalPages(res.totalPages || 0);
+    } catch (err: any) {
+      toast.error(err.message || 'Nie udało się pobrać logów systemowych');
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAllBets();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'logs' && isActualAdmin) {
+      fetchLogs(0);
+    }
+  }, [activeTab, isActualAdmin]);
 
   const handleAddWinOrScoreBet = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,10 +122,19 @@ export function AdminPage() {
       return;
     }
 
+    if (betName.length > 80) {
+      toast.error('Nazwa zakładu nie może przekraczać 80 znaków');
+      return;
+    }
+    if (gameName.length > 80) {
+      toast.error('Nazwa meczu nie może przekraczać 80 znaków');
+      return;
+    }
+
     const gameDto: GameDto = {
       id: Number(gameId) || 0,
       name: gameName,
-      startDate: new Date(gameStartDate).toISOString(),
+      startDate: formatLocalDateTime(gameStartDate),
       team1,
       team2,
       sport,
@@ -100,7 +149,7 @@ export function AdminPage() {
           id: Number(betId) || 0,
           name: betName,
           currentMultiplier: Number(multiplier) || 2.0,
-          stopDate: new Date(stopDate).toISOString(),
+          stopDate: formatLocalDateTime(stopDate),
           game: gameDto,
         };
         await betService.adminAddWinBet(dto);
@@ -110,7 +159,7 @@ export function AdminPage() {
           id: Number(betId) || 0,
           name: betName,
           currentMultiplier: Number(multiplier) || 2.0,
-          stopDate: new Date(stopDate).toISOString(),
+          stopDate: formatLocalDateTime(stopDate),
           game: gameDto,
         };
         await betService.adminAddScoreBet(dto);
@@ -133,12 +182,17 @@ export function AdminPage() {
       return;
     }
 
+    if (predName.length > 80) {
+      toast.error('Nazwa predykcji nie może przekraczać 80 znaków');
+      return;
+    }
+
     const dto: PredictionBetDto = {
       id: Number(predId) || 0,
       name: predName,
       currentMultiplier: Number(predMultiplier) || 1.8,
-      startDate: new Date(predStartDate).toISOString(),
-      stopDate: new Date(predStopDate).toISOString(),
+      startDate: formatLocalDateTime(predStartDate),
+      stopDate: formatLocalDateTime(predStopDate),
       trueBets: Number(trueBets) || 0,
       falseBets: Number(falseBets) || 0,
       trueBetsAmount: Number(trueBetsAmount) || 0,
@@ -379,6 +433,18 @@ export function AdminPage() {
         >
           Rozstrzygnij Prediction
         </button>
+        {isActualAdmin && (
+          <button
+            onClick={() => setActiveTab('logs')}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer ${
+              activeTab === 'logs'
+                ? 'bg-green-600 text-white shadow-md shadow-green-600/10'
+                : 'bg-card border border-border text-foreground hover:bg-muted'
+            }`}
+          >
+            Logi systemowe
+          </button>
+        )}
       </div>
 
       {/* Main Content Areas */}
@@ -1027,6 +1093,97 @@ export function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {/* 6. SYSTEM LOGS TAB (ONLY FOR ADMIN) */}
+        {activeTab === 'logs' && isActualAdmin && (
+          <div className="bg-card rounded-lg border border-border shadow-md p-6">
+            <div className="flex justify-between items-center mb-6 border-b border-border pb-3">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <FileText className="w-5 h-5 text-green-600" />
+                Logi Systemowe
+              </h3>
+              <button
+                onClick={() => fetchLogs(logsPage)}
+                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-card hover:bg-muted text-xs font-medium transition cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${logsLoading ? 'animate-spin' : ''}`} />
+                Odśwież logi
+              </button>
+            </div>
+            
+            {logsLoading && logs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">Ładowanie logów...</div>
+            ) : logs.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">Brak zarejestrowanych logów.</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="overflow-x-auto border border-border rounded-lg">
+                  <table className="w-full text-left text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/40 text-muted-foreground font-medium">
+                        <th className="py-3 px-4">Czas</th>
+                        <th className="py-3 px-4">Użytkownik</th>
+                        <th className="py-3 px-4">Akcja / Zdarzenie</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border text-xs">
+                      {logs.map((logItem, index) => (
+                        <tr key={index} className="hover:bg-muted/20 transition">
+                          <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                            <span className="flex items-center gap-1.5 font-mono">
+                              <Clock className="w-3.5 h-3.5" />
+                              {new Date(logItem.time).toLocaleString('pl-PL')}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap">
+                            {logItem.user ? (
+                              <div>
+                                <span className="font-semibold text-foreground">
+                                  {logItem.user.name} {logItem.user.surname}
+                                </span>
+                                <span className="block text-[10px] text-muted-foreground font-mono">
+                                  ID: #{logItem.user.id} | {logItem.user.email}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground font-medium">System</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-foreground break-all whitespace-pre-wrap font-mono bg-muted/5">
+                            {logItem.log}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                {logsTotalPages > 1 && (
+                  <div className="flex justify-between items-center pt-4 border-t border-border">
+                    <button
+                      onClick={() => fetchLogs(logsPage - 1)}
+                      disabled={logsPage === 0 || logsLoading}
+                      className="px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Poprzednia
+                    </button>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      Strona {logsPage + 1} z {logsTotalPages}
+                    </span>
+                    <button
+                      onClick={() => fetchLogs(logsPage + 1)}
+                      disabled={logsPage === logsTotalPages - 1 || logsLoading}
+                      className="px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Następna
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -33,6 +33,9 @@ export const betService = {
   getWinSports: () =>
     apiClient.get<SportListDto[]>(API_ENDPOINTS.BET.WIN_SPORTS),
 
+  getScoreSports: () =>
+    apiClient.get<SportListDto[]>(API_ENDPOINTS.BET.SCORE_SPORTS),
+
   placeScoreBet: (dto: ScoreBetPlaceDto) =>
     apiClient.post<string>(API_ENDPOINTS.BET.SCORE_PLACE, dto),
 

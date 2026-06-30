@@ -2,11 +2,13 @@ import { SportCategories } from '../components/SportCategories';
 import { MatchCard } from '../components/MatchCard';
 import { BettingSlip } from '../components/BettingSlip';
 import { SocialBettingPanel } from '../components/SocialBettingPanel';
+import { ScoreMatchCard } from '../components/ScoreMatchCard';
+import { PredictionCard } from '../components/PredictionCard';
 import { Flame, Star } from 'lucide-react';
 import { useBetting } from '../context';
 import { useState, useEffect } from 'react';
 import { betService } from '../services';
-import type { WinBetDto } from '../types';
+import type { WinBetDto, ScoreBetDto, PredictionBetDto } from '../types';
 
 function mapWinBetToMatch(bet: WinBetDto) {
   const now = new Date();
@@ -40,56 +42,107 @@ function mapWinBetToMatch(bet: WinBetDto) {
 export function HomePage() {
   const { bets, addBet, removeBet, clearAllBets } = useBetting();
   const [matches, setMatches] = useState<ReturnType<typeof mapWinBetToMatch>[]>([]);
+  const [scoreBets, setScoreBets] = useState<ScoreBetDto[]>([]);
+  const [predictionBets, setPredictionBets] = useState<PredictionBetDto[]>([]);
   const [selectedSport, setSelectedSport] = useState<string | undefined>(undefined);
+  const [betCategory, setBetCategory] = useState<'win' | 'score' | 'prediction'>('win');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    if (selectedSport === undefined) {
-      // Fetch all sports list first, then fetch bets for each sport individually
-      // to isolate and bypass any 500 errors caused by corrupt data in specific sports (e.g. ping-pong)
-      betService.getWinSports()
-        .then((sportsList) => {
-          const promises = (sportsList || []).map((s) =>
-            betService.getWinCurrent(s.sportName, 0, 10)
-              .then((page) => page?.content || [])
-              .catch((err) => {
-                console.error(`[HOMEPAGE] Failed to load bets for sport ${s.sportName}:`, err);
-                return [];
-              })
-          );
-          return Promise.all(promises);
-        })
-        .then((results) => {
-          const allContent = results.flat();
-          setMatches(allContent.map(mapWinBetToMatch));
-        })
-        .catch((err) => {
-          console.error('[HOMEPAGE] Failed to load all bets:', err);
-          setMatches([]);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      // Fetch bets for the single selected sport category
-      betService.getWinCurrent(selectedSport, 0, 10)
-        .then((page) => {
-          if (page?.content) {
-            setMatches(page.content.map(mapWinBetToMatch));
-          } else {
+    if (betCategory === 'win') {
+      if (selectedSport === undefined) {
+        betService.getWinSports()
+          .then((sportsList) => {
+            const promises = (sportsList || []).map((s) =>
+              betService.getWinCurrent(s.sportName, 0, 10)
+                .then((page) => page?.content || [])
+                .catch((err) => {
+                  console.error(`[HOMEPAGE] Failed to load bets for sport ${s.sportName}:`, err);
+                  return [];
+                })
+            );
+            return Promise.all(promises);
+          })
+          .then((results) => {
+            const allContent = results.flat();
+            setMatches(allContent.map(mapWinBetToMatch));
+          })
+          .catch((err) => {
+            console.error('[HOMEPAGE] Failed to load all bets:', err);
             setMatches([]);
-          }
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        betService.getWinCurrent(selectedSport, 0, 10)
+          .then((page) => {
+            if (page?.content) {
+              setMatches(page.content.map(mapWinBetToMatch));
+            } else {
+              setMatches([]);
+            }
+          })
+          .catch((err) => {
+            console.error('[HOMEPAGE] Failed to load bets:', err);
+            setMatches([]);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+    } else if (betCategory === 'score') {
+      if (selectedSport === undefined) {
+        betService.getScoreSports()
+          .then((sportsList) => {
+            const promises = (sportsList || []).map((s) =>
+              betService.getScoreCurrent(s.sportName, 0, 10)
+                .then((page) => page?.content || [])
+                .catch((err) => {
+                  console.error(`[HOMEPAGE] Failed to load score bets for sport ${s.sportName}:`, err);
+                  return [];
+                })
+            );
+            return Promise.all(promises);
+          })
+          .then((results) => {
+            setScoreBets(results.flat());
+          })
+          .catch((err) => {
+            console.error('[HOMEPAGE] Failed to load all score bets:', err);
+            setScoreBets([]);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        betService.getScoreCurrent(selectedSport, 0, 10)
+          .then((page) => {
+            setScoreBets(page?.content || []);
+          })
+          .catch((err) => {
+            console.error('[HOMEPAGE] Failed to load score bets:', err);
+            setScoreBets([]);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }
+    } else if (betCategory === 'prediction') {
+      betService.getPredictionCurrent(0, 30)
+        .then((page) => {
+          setPredictionBets(page?.content || []);
         })
         .catch((err) => {
-          console.error('[HOMEPAGE] Failed to load bets:', err);
-          setMatches([]);
+          console.error('[HOMEPAGE] Failed to load prediction bets:', err);
+          setPredictionBets([]);
         })
         .finally(() => {
           setLoading(false);
         });
     }
-  }, [selectedSport]);
+  }, [selectedSport, betCategory]);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -111,10 +164,51 @@ export function HomePage() {
           </div>
 
           <div>
+            <div className="flex border-b border-border text-sm font-medium mb-6">
+              <button
+                type="button"
+                onClick={() => setBetCategory('win')}
+                className={`pb-3 px-4 border-b-2 transition cursor-pointer ${
+                  betCategory === 'win'
+                    ? 'border-green-600 text-green-600 font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Zakłady 1X2
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetCategory('score')}
+                className={`pb-3 px-4 border-b-2 transition cursor-pointer ${
+                  betCategory === 'score'
+                    ? 'border-green-600 text-green-600 font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Dokładny Wynik
+              </button>
+              <button
+                type="button"
+                onClick={() => setBetCategory('prediction')}
+                className={`pb-3 px-4 border-b-2 transition cursor-pointer ${
+                  betCategory === 'prediction'
+                    ? 'border-green-600 text-green-600 font-bold'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Predictions
+              </button>
+            </div>
+
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-              <h2>Polecane zakłady</h2>
+              <h2>
+                {betCategory === 'win' && 'Polecane zakłady 1X2'}
+                {betCategory === 'score' && 'Zakłady na Dokładny Wynik'}
+                {betCategory === 'prediction' && 'Zakłady Prediction'}
+              </h2>
             </div>
+
             <div className="grid gap-4">
               {loading ? (
                 Array.from({ length: 3 }).map((_, i) => (
@@ -144,26 +238,50 @@ export function HomePage() {
                     </div>
                   </div>
                 ))
-              ) : matches.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
-                  <p className="text-lg font-medium">Brak dostępnych zakładów dla tego sportu</p>
-                  <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
-                </div>
+              ) : betCategory === 'win' ? (
+                matches.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
+                    <p className="text-lg font-medium">Brak dostępnych zakładów dla tego sportu</p>
+                    <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
+                  </div>
+                ) : (
+                  matches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      league={match.league}
+                      homeTeam={match.homeTeam}
+                      awayTeam={match.awayTeam}
+                      time={match.time}
+                      odds={match.odds}
+                      isLive={match.isLive}
+                      betId={match.betId}
+                      betType={match.betType}
+                      onAddToBet={addBet}
+                    />
+                  ))
+                )
+              ) : betCategory === 'score' ? (
+                scoreBets.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
+                    <p className="text-lg font-medium">Brak dostępnych zakładów dokładnego wyniku dla tego sportu</p>
+                    <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
+                  </div>
+                ) : (
+                  scoreBets.map((bet) => (
+                    <ScoreMatchCard key={bet.id} bet={bet} />
+                  ))
+                )
               ) : (
-                matches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    league={match.league}
-                    homeTeam={match.homeTeam}
-                    awayTeam={match.awayTeam}
-                    time={match.time}
-                    odds={match.odds}
-                    isLive={match.isLive}
-                    betId={match.betId}
-                    betType={match.betType}
-                    onAddToBet={addBet}
-                  />
-                ))
+                predictionBets.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
+                    <p className="text-lg font-medium">Brak dostępnych prediction</p>
+                    <p className="text-sm mt-1">Sprawdź ponownie później.</p>
+                  </div>
+                ) : (
+                  predictionBets.map((bet) => (
+                    <PredictionCard key={bet.id} bet={bet} />
+                  ))
+                )
               )}
             </div>
           </div>

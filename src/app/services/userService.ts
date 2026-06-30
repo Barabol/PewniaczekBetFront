@@ -35,4 +35,7 @@ export const userService = {
 
   getPayments: (page = 0, pageSize = 5) =>
     apiClient.get<PagePaymentDto>(API_ENDPOINTS.USER.PAYMENTS, { page, pageSize }),
+
+  checkAuth: () =>
+    apiClient.get<boolean>(API_ENDPOINTS.USER.AUTH),
 };

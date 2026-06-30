@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
     FOLLOWERS: '/api/user/followers',
     FOLLOWED: '/api/user/followed',
     PAYMENTS: '/api/user/payments', // Added payments endpoint
+    AUTH: '/api/user/auth',
   },
   BET: {
     WIN_PLACE: '/api/bet/win/place',
@@ -70,6 +71,9 @@ export const API_ENDPOINTS = {
     PREDICTION_ADD: '/api/worker/prediction/add',
     PREDICTION_END: '/api/worker/prediction/end',
     GAME_UPDATE: '/api/worker/game/update',
+  },
+  ADMIN: {
+    LOGS: '/api/admin/logs',
   },
   BET_HISTORY: '/api/bet/history',
   BET_HISTORY_WIN: '/api/bet/win/history',

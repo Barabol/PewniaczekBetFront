@@ -13,6 +13,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   updateBalance: (amount: number) => void;
   loginWithGithub: () => void;
+  connectGithub: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,10 +72,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loginWithGithub = () => {
+    window.location.href = `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.OATH.GITHUB_INITIATE_LOGIN}`;
+  };
+
+  const connectGithub = () => {
     window.location.href = `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.OATH.GITHUB_INITIATE}`;
   };
 
   useEffect(() => {
+    const verifyAuth = async () => {
+      try {
+        const loggedIn = await userService.checkAuth();
+        if (loggedIn) {
+          await refreshUser();
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
 
@@ -84,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    refreshUser().finally(() => setIsAuthLoading(false));
+    verifyAuth();
   }, [refreshUser]);
 
   return (
@@ -99,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshUser,
         updateBalance,
         loginWithGithub,
+        connectGithub,
       }}
     >
       {children}
