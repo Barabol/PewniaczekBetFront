@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
@@ -94,5 +95,11 @@ export default defineConfig({
       '/pay': makeProxyConfig(),
       '/social': makeProxyConfig(),
     },
+  },
+
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
   },
 })
