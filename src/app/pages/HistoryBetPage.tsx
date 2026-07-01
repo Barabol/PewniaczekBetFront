@@ -3,6 +3,7 @@ import { Clock, ChevronLeft, ChevronRight, Trophy, Search, AlertCircle } from 'l
 import { betService } from '../services';
 import { useAuth } from '../context';
 import type { BetHistoryItem, BetStatus, BetType, UserWinBetDto, UserScoreBetDto, UserBetPredictionDto } from '../types';
+import { t } from '../utils/translator';
 
 const STATUS_LABELS: Record<BetStatus, string> = {
   WIN: 'Wygrana',
@@ -189,7 +190,7 @@ export function HistoryBetPage() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center gap-3 mb-6">
         <Clock className="w-6 h-6 text-green-600" />
-        <h2>Historia zakładów</h2>
+        <h2>{t('Historia zakładów')}</h2>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-6 p-1 bg-muted rounded-lg w-fit">
@@ -197,13 +198,13 @@ export function HistoryBetPage() {
           <button
             key={tab}
             onClick={() => { setStatusFilter(tab); setPage(0); }}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition ${
+            className={`px-4 py-2 rounded-md text-sm font-medium transition cursor-pointer ${
               statusFilter === tab
                 ? 'bg-card text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {tab === 'ALL' ? 'Wszystkie' : STATUS_LABELS[tab]}
+            {tab === 'ALL' ? t('Wszystkie') : t(STATUS_LABELS[tab])}
           </button>
         ))}
       </div>
@@ -212,18 +213,18 @@ export function HistoryBetPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
             <div className="animate-spin w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full mr-3" />
-            Ładowanie...
+            {t('Ładowanie...')}
           </div>
         ) : apiError ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <AlertCircle className="w-12 h-12 mb-3 opacity-50" />
-            <p className="font-medium">Historia zakładów jest tymczasowo niedostępna</p>
-            <p className="text-sm mt-1">Spróbuj ponownie później</p>
+            <p className="font-medium">{t('Historia zakładów jest tymczasowo niedostępna')}</p>
+            <p className="text-sm mt-1">{t('Spróbuj ponownie później')}</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Search className="w-12 h-12 mb-3 opacity-50" />
-            <p>Brak historii zakładów</p>
+            <p>{t('Brak historii zakładów')}</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -234,7 +235,7 @@ export function HistoryBetPage() {
                     <div className="font-medium truncate">{bet.team1} vs {bet.team2}</div>
                     <div className="text-sm text-muted-foreground mt-1">
                       <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-muted mr-2">
-                        {TYPE_LABELS[bet.type]}
+                        {t(TYPE_LABELS[bet.type])}
                       </span>
                       {new Date(bet.date).toLocaleString('pl-PL', {
                         day: 'numeric',
@@ -253,7 +254,7 @@ export function HistoryBetPage() {
                     <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mt-1 ${STATUS_CLASSES[bet.status]}`}>
                       {bet.status === 'WIN' && <Trophy className="w-3 h-3" />}
                       {bet.status === 'LOSE' && <>&times;</>}
-                      {STATUS_LABELS[bet.status]}
+                      {t(STATUS_LABELS[bet.status])}
                     </div>
                     {bet.status === 'WIN' && (
                       <div className="text-sm font-medium text-green-600 mt-1">
@@ -272,20 +273,20 @@ export function HistoryBetPage() {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm hover:bg-muted transition disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm hover:bg-muted transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
-              Poprzednia
+              {t('Poprzednia')}
             </button>
             <span className="text-sm text-muted-foreground">
-              Strona {currentPage + 1} z {totalPages}
+              {t('Strona')} {currentPage + 1} {t('z')} {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={currentPage >= totalPages - 1}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm hover:bg-muted transition disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm hover:bg-muted transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             >
-              Następna
+              {t('Następna')}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

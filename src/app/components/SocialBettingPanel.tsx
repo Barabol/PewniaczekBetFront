@@ -3,6 +3,7 @@ import { Users, UserCheck } from 'lucide-react';
 import { betService, userService } from '../services';
 import type { UserWinBetDto } from '../types';
 import { useAuth } from '../context';
+import { useTranslation } from 'react-i18next';
 
 interface GroupedBet {
   betId: number;
@@ -27,6 +28,7 @@ export function SocialBettingPanel() {
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const { isLoggedIn, user: currentUser } = useAuth();
+  const { t } = useTranslation();
 
   const fetchSocialBets = useCallback(async () => {
     if (!isLoggedIn) {
@@ -161,30 +163,30 @@ export function SocialBettingPanel() {
         ) : (
           <Users className="w-5 h-5 text-green-600" />
         )}
-        <h3 className="font-semibold">Jak obstawiają inni</h3>
+        <h3 className="font-semibold">{t('social_bets.title')}</h3>
       </div>
       {isLoggedIn && (
-        <div className="flex bg-muted rounded-lg p-0.5">
+        <div className="flex bg-muted rounded-lg p-0.5 font-sans">
           <button
             onClick={() => setFilterMode('all')}
-            className={`px-3 py-1 text-xs rounded-md transition ${
+            className={`px-3 py-1 text-xs rounded-md transition cursor-pointer ${
               filterMode === 'all'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Wszyscy
+            {t('social_bets.all')}
           </button>
           <button
             onClick={() => setFilterMode('followed')}
-            className={`px-3 py-1 text-xs rounded-md transition flex items-center gap-1 ${
+            className={`px-3 py-1 text-xs rounded-md transition flex items-center gap-1 cursor-pointer ${
               filterMode === 'followed'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <UserCheck className="w-3 h-3" />
-            Obserwowani
+            {t('social_bets.followed')}
           </button>
         </div>
       )}
@@ -215,13 +217,13 @@ export function SocialBettingPanel() {
           {filterMode === 'followed' ? (
             <>
               <UserCheck className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Brak zakładów obserwowanych użytkowników</p>
-              <p className="text-xs mt-1">Obserwuj innych użytkowników, aby zobaczyć ich zakłady</p>
+              <p className="text-sm">{t('social_bets.empty_followed')}</p>
+              <p className="text-xs mt-1">{t('social_bets.empty_followed_desc')}</p>
             </>
           ) : (
             <>
               <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Brak zakładów społecznościowych</p>
+              <p className="text-sm">{t('social_bets.empty')}</p>
             </>
           )}
         </div>

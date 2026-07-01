@@ -38,6 +38,12 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return textBody as unknown as T;
 }
 
+type RequestInterceptor = (config: RequestInit) => RequestInit | Promise<RequestInit>;
+type ResponseInterceptor = (response: Response) => Response | Promise<Response>;
+
+const requestInterceptors: RequestInterceptor[] = [];
+const responseInterceptors: ResponseInterceptor[] = [];
+
 async function request<T>(
   endpoint: string,
   method: string,
@@ -61,7 +67,7 @@ async function request<T>(
     'Content-Type': 'application/json',
   };
 
-  const config: RequestInit = {
+  let config: RequestInit = {
     method,
     credentials: 'include',
     headers,
@@ -69,6 +75,11 @@ async function request<T>(
 
   if (body !== undefined) {
     config.body = JSON.stringify(body);
+  }
+
+  // Apply request interceptors
+  for (const interceptor of requestInterceptors) {
+    config = await interceptor(config);
   }
 
   console.log('[API CLIENT] Request:', {
@@ -80,15 +91,21 @@ async function request<T>(
 
   const response = await fetch(url, config);
   
+  let interceptedResponse = response;
+  // Apply response interceptors
+  for (const interceptor of responseInterceptors) {
+    interceptedResponse = await interceptor(interceptedResponse);
+  }
+
   console.log('[API CLIENT] Response:', {
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    headers: Object.fromEntries(response.headers.entries()),
+    status: interceptedResponse.status,
+    statusText: interceptedResponse.statusText,
+    url: interceptedResponse.url,
+    headers: Object.fromEntries(interceptedResponse.headers.entries()),
     timestamp: new Date().toISOString()
   });
   
-  return handleResponse<T>(response);
+  return handleResponse<T>(interceptedResponse);
 }
 
 export const apiClient = {
@@ -100,4 +117,26 @@ export const apiClient = {
 
   delete: <T>(endpoint: string, params?: Record<string, string | number | undefined>) =>
     request<T>(endpoint, 'DELETE', undefined, params),
+
+  interceptors: {
+    request: {
+      use: (interceptor: RequestInterceptor) => {
+        requestInterceptors.push(interceptor);
+      }
+    },
+    response: {
+      use: (interceptor: ResponseInterceptor) => {
+        responseInterceptors.push(interceptor);
+      }
+    }
+  }
 };
+
+// Add default language request interceptor
+apiClient.interceptors.request.use((config) => {
+  const lang = localStorage.getItem('i18nextLng') || 'pl';
+  if (config.headers) {
+    (config.headers as Record<string, string>)['Accept-Language'] = lang;
+  }
+  return config;
+});

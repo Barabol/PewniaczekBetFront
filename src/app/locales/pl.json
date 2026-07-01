@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "sport": "Sport",
+    "live": "Live",
+    "history": "Historia",
+    "admin": "Admin",
+    "profile": "Profil",
+    "login": "Zaloguj"
+  },
+  "wallet": {
+    "title": "Portfel",
+    "balance": "Saldo",
+    "add_funds": "Zasil konto",
+    "history": "Historia transakcji"
+  },
+  "bet_slip": {
+    "title": "Kupon zakładów",
+    "empty": "Brak zakładów",
+    "empty_desc": "Kliknij na kurs, aby dodać zakład do kuponu",
+    "clear": "Wyczyść",
+    "stake": "Stawka (PLN)",
+    "total_odds": "Łączny kurs",
+    "potential_win": "Potencjalna wygrana",
+    "place_bet": "Obstaw teraz",
+    "placing": "Obstawianie..."
+  },
+  "social_bets": {
+    "title": "Jak obstawiają inni",
+    "all": "Wszyscy",
+    "followed": "Obserwowani",
+    "empty": "Brak zakładów społecznościowych",
+    "empty_followed": "Brak zakładów obserwowanych użytkowników",
+    "empty_followed_desc": "Obserwuj innych użytkowników, aby zobaczyć ich zakłady"
+  }
+}

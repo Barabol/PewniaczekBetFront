@@ -4,6 +4,7 @@ import { useAuth } from '../context';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ApiError } from '../services';
+import { t } from '../utils/translator';
 
 export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -91,9 +92,9 @@ export function LoginPage() {
               <Trophy className="w-12 h-12 text-white" />
             </div>
           </div>
-          <h2 className="mb-2">{isRegister ? 'Zarejestruj się' : 'Witaj w PewniaczekBet'}</h2>
+          <h2 className="mb-2">{isRegister ? t('Zarejestruj się') : t('Witaj w PewniaczekBet')}</h2>
           <p className="text-muted-foreground">
-            {isRegister ? 'Utwórz konto i zacznij obstawiać' : 'Zaloguj się, aby kontynuować'}
+            {isRegister ? t('Utwórz konto i zacznij obstawiać') : t('Zaloguj się, aby kontynuować')}
           </p>
         </div>
 
@@ -102,7 +103,7 @@ export function LoginPage() {
             {isRegister && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm mb-2">Imię</label>
+                  <label className="block text-sm mb-2">{t('Imię')}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
@@ -116,7 +117,7 @@ export function LoginPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm mb-2">Nazwisko</label>
+                  <label className="block text-sm mb-2">{t('Nazwisko')}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <input
@@ -133,7 +134,7 @@ export function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm mb-2">Email</label>
+              <label className="block text-sm mb-2">{t('Email')}</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -148,7 +149,7 @@ export function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Hasło</label>
+              <label className="block text-sm mb-2">{t('Hasło')}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
@@ -164,21 +165,21 @@ export function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium"
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition font-medium cursor-pointer"
             >
-              {isRegister ? 'Zarejestruj się' : 'Zaloguj się'}
+              {isRegister ? t('Zarejestruj się') : t('Zaloguj się')}
             </button>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">
-              {isRegister ? 'Masz już konto? ' : 'Nie masz konta? '}
+              {isRegister ? t('Masz już konto? ') : t('Nie masz konta? ')}
             </span>
             <button
               onClick={() => setIsRegister(!isRegister)}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-green-600 hover:text-green-700 font-medium cursor-pointer"
             >
-              {isRegister ? 'Zaloguj się' : 'Zarejestruj się'}
+              {isRegister ? t('Zaloguj się') : t('Zarejestruj się')}
             </button>
           </div>
 
@@ -187,17 +188,17 @@ export function LoginPage() {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">lub</span>
+              <span className="bg-card px-2 text-muted-foreground">{t('lub')}</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={loginWithGithub}
-            className="w-full flex items-center justify-center gap-3 bg-[#24292F] text-white py-3 rounded-lg hover:bg-[#1b1f23] transition font-medium"
+            className="w-full flex items-center justify-center gap-3 bg-[#24292F] text-white py-3 rounded-lg hover:bg-[#1b1f23] transition font-medium cursor-pointer"
           >
             <Github className="w-5 h-5" />
-            Zaloguj przez GitHub
+            {t('Zaloguj przez GitHub')}
           </button>
         </div>
 

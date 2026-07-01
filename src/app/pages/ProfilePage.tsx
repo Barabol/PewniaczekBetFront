@@ -5,6 +5,7 @@ import { userService, oathService } from '../services';
 import { useState, useEffect } from 'react';
 import type { UserDto, OathDto } from '../types';
 import { toast } from 'sonner';
+import { t } from '../utils/translator';
 
 export function ProfilePage() {
   const { user, logout, refreshUser, connectGithub } = useAuth();
@@ -133,14 +134,14 @@ export function ProfilePage() {
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
               >
                 <Wallet className="w-5 h-5 text-muted-foreground" />
-                <span>Portfel</span>
+                <span>{t('Portfel')}</span>
               </button>
               <button
                 onClick={() => handleNavigate('history')}
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
               >
                 <Clock className="w-5 h-5 text-muted-foreground" />
-                <span>Historia</span>
+                <span>{t('Historia')}</span>
               </button>
               {githubAccount ? (
                 <button
@@ -149,7 +150,7 @@ export function ProfilePage() {
                 >
                   <Github className="w-5 h-5" />
                   <div className="flex-1">
-                    <span className="block text-sm font-medium">Odłącz Githuba</span>
+                    <span className="block text-sm font-medium">{t('Odłącz Githuba')}</span>
                     <span className="block text-xs opacity-75 font-mono">@{githubAccount.login}</span>
                   </div>
                 </button>
@@ -159,7 +160,7 @@ export function ProfilePage() {
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition text-left"
                 >
                   <Github className="w-5 h-5" />
-                  <span>Podłącz Githuba!</span>
+                  <span>{t('Podłącz Githuba!')}</span>
                 </button>
               )}
               <button
@@ -170,16 +171,16 @@ export function ProfilePage() {
                   <>
                     <Eye className="w-5 h-5 text-green-600" />
                     <div className="flex-1">
-                      <span className="block text-sm font-medium">Profil: Publiczny</span>
-                      <span className="block text-xs opacity-75">Kliknij, aby ukryć profil</span>
+                      <span className="block text-sm font-medium">{t('Profil: Publiczny')}</span>
+                      <span className="block text-xs opacity-75">{t('Kliknij, aby ukryć profil')}</span>
                     </div>
                   </>
                 ) : (
                   <>
                     <EyeOff className="w-5 h-5 text-muted-foreground" />
                     <div className="flex-1">
-                      <span className="block text-sm font-medium">Profil: Prywatny</span>
-                      <span className="block text-xs opacity-75">Kliknij, aby upublicznić</span>
+                      <span className="block text-sm font-medium">{t('Profil: Prywatny')}</span>
+                      <span className="block text-xs opacity-75">{t('Kliknij, aby upublicznić')}</span>
                     </div>
                   </>
                 )}
@@ -189,7 +190,7 @@ export function ProfilePage() {
                 className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-destructive/10 text-destructive transition text-left"
               >
                 <LogOut className="w-5 h-5" />
-                <span>Wyloguj się</span>
+                <span>{t('Wyloguj się')}</span>
               </button>
             </div>
           </div>
@@ -197,13 +198,13 @@ export function ProfilePage() {
 
         <div className="lg:col-span-2">
           <div className="bg-card rounded-lg shadow-md p-6 border border-border mb-6">
-            <h3 className="mb-4">Konto</h3>
+            <h3 className="mb-4">{t('Konto')}</h3>
 
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <div className="text-sm text-muted-foreground">Saldo</div>
+                  <div className="text-sm text-muted-foreground">{t('Saldo')}</div>
                   <div className="font-bold text-green-600">{(user?.balance ?? 0).toFixed(2)} PLN</div>
                 </div>
               </div>
@@ -211,7 +212,7 @@ export function ProfilePage() {
               <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <TrendingUp className="w-5 h-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <div className="text-sm text-muted-foreground">Freebet</div>
+                  <div className="text-sm text-muted-foreground">{t('Freebet')}</div>
                   <div>{(user?.freeBetBalance ?? 0).toFixed(2)} PLN</div>
                 </div>
               </div>
@@ -222,7 +223,7 @@ export function ProfilePage() {
             <div className="flex justify-between items-center mb-4 pb-2 border-b border-border">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-green-600" />
-                <h3 className="text-base font-bold">Społeczność</h3>
+                <h3 className="text-base font-bold">{t('Społeczność')}</h3>
               </div>
               <div className="flex gap-1 bg-muted p-0.5 rounded-lg text-xs">
                 <button
@@ -234,7 +235,7 @@ export function ProfilePage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Wszyscy
+                  {t('Wszyscy')}
                 </button>
                 <button
                   type="button"
@@ -245,7 +246,7 @@ export function ProfilePage() {
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Obserwujący mnie ({followers.length})
+                  {t('Obserwujący mnie')} ({followers.length})
                 </button>
               </div>
             </div>

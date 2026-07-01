@@ -1,5 +1,6 @@
 import { Trophy, User, Menu, Wallet } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
   currentPage: string;
@@ -12,6 +13,13 @@ interface HeaderProps {
 }
 
 export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLoggedIn, balance, isAdmin = false }: HeaderProps) {
+  const { t, i18n } = useTranslation();
+
+  const toggleLanguage = () => {
+    const nextLang = i18n.language && i18n.language.startsWith('en') ? 'pl' : 'en';
+    i18n.changeLanguage(nextLang);
+  };
+
   return (
     <header className="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg">
       <div className="container mx-auto px-4 py-4">
@@ -26,13 +34,13 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
               onClick={() => onNavigate('home')}
               className={`hover:text-green-200 transition ${currentPage === 'home' ? 'border-b-2 border-white' : ''}`}
             >
-              Sport
+              {t('nav.sport')}
             </button>
             <button
               onClick={() => onNavigate('live')}
               className={`hover:text-green-200 transition ${currentPage === 'live' ? 'border-b-2 border-white' : ''}`}
             >
-              Live
+              {t('nav.live')}
             </button>
             {isLoggedIn && (
               <>
@@ -40,14 +48,14 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
                   onClick={() => onNavigate('history')}
                   className={`hover:text-green-200 transition ${currentPage === 'history' ? 'border-b-2 border-white' : ''}`}
                 >
-                  Historia
+                  {t('nav.history')}
                 </button>
                 {isAdmin && (
                   <button
-                    onClick={() => onNavigate('admin')}
-                    className={`hover:text-green-200 transition ${currentPage === 'admin' ? 'border-b-2 border-white' : ''}`}
+                     onClick={() => onNavigate('admin')}
+                     className={`hover:text-green-200 transition ${currentPage === 'admin' ? 'border-b-2 border-white' : ''}`}
                   >
-                    Admin
+                    {t('nav.admin')}
                   </button>
                 )}
               </>
@@ -56,6 +64,13 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
 
           <div className="flex items-center gap-3">
             <ThemeToggle isDark={isDark} onToggle={onThemeToggle} />
+            <button
+              onClick={toggleLanguage}
+              className="px-2 py-1.5 rounded bg-green-800 hover:bg-green-900 text-xs font-bold transition flex items-center justify-center uppercase cursor-pointer"
+              title="Zmień język / Change language"
+            >
+              {i18n.language && i18n.language.startsWith('en') ? 'PL' : 'EN'}
+            </button>
             {isLoggedIn && (
               <button
                 onClick={() => onNavigate('wallet')}
@@ -70,7 +85,7 @@ export function Header({ currentPage, onNavigate, isDark, onThemeToggle, isLogge
               className="flex items-center gap-2 bg-green-800 px-4 py-2 rounded-lg hover:bg-green-900 transition"
             >
               <User className="w-4 h-4" />
-              <span className="hidden md:inline">{isLoggedIn ? 'Profil' : 'Zaloguj'}</span>
+              <span className="hidden md:inline">{isLoggedIn ? t('nav.profile') : t('nav.login')}</span>
             </button>
             <button className="md:hidden">
               <Menu className="w-6 h-6" />

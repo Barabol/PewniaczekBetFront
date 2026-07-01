@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "sport": "Sports",
+    "live": "Live",
+    "history": "History",
+    "admin": "Admin",
+    "profile": "Profile",
+    "login": "Log In"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "balance": "Balance",
+    "add_funds": "Add funds",
+    "history": "Transaction History"
+  },
+  "bet_slip": {
+    "title": "Betting Slip",
+    "empty": "No bets",
+    "empty_desc": "Click on odds to add a bet to the slip",
+    "clear": "Clear",
+    "stake": "Stake (PLN)",
+    "total_odds": "Total Odds",
+    "potential_win": "Potential Win",
+    "place_bet": "Bet Now",
+    "placing": "Placing..."
+  },
+  "social_bets": {
+    "title": "How others bet",
+    "all": "All",
+    "followed": "Followed",
+    "empty": "No social bets available",
+    "empty_followed": "No bets from followed users",
+    "empty_followed_desc": "Follow other users to see their bets"
+  }
+}

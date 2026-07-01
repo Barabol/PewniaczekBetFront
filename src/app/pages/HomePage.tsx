@@ -8,6 +8,7 @@ import { Flame, Star } from 'lucide-react';
 import { useBetting } from '../context';
 import { useState, useEffect } from 'react';
 import { betService } from '../services';
+import { t } from '../utils/translator';
 import type { WinBetDto, ScoreBetDto, PredictionBetDto } from '../types';
 
 function mapWinBetToMatch(bet: WinBetDto) {
@@ -182,9 +183,9 @@ export function HomePage() {
           <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-6 h-6" />
-              <h2>Gorące mecze</h2>
+              <h2>{t('Gorące mecze')}</h2>
             </div>
-            <p className="text-sm opacity-90">Sprawdź najciekawsze spotkania tego weekendu!</p>
+            <p className="text-sm opacity-90">{t('Sprawdź najciekawsze spotkania tego weekendu!')}</p>
           </div>
 
           <div>
@@ -198,7 +199,7 @@ export function HomePage() {
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Zakłady 1X2
+                {t('Zakłady 1X2')}
               </button>
               <button
                 type="button"
@@ -209,7 +210,7 @@ export function HomePage() {
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Dokładny Wynik
+                {t('Dokładny Wynik')}
               </button>
               <button
                 type="button"
@@ -220,16 +221,16 @@ export function HomePage() {
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Predictions
+                {t('Zakłady Prediction')}
               </button>
             </div>
 
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
               <h2>
-                {betCategory === 'win' && 'Polecane zakłady 1X2'}
-                {betCategory === 'score' && 'Zakłady na Dokładny Wynik'}
-                {betCategory === 'prediction' && 'Zakłady Prediction'}
+                {betCategory === 'win' && t('Polecane zakłady 1X2')}
+                {betCategory === 'score' && t('Zakłady na Dokładny Wynik')}
+                {betCategory === 'prediction' && t('Zakłady Prediction')}
               </h2>
             </div>
 
@@ -265,8 +266,8 @@ export function HomePage() {
               ) : betCategory === 'win' ? (
                 matches.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
-                    <p className="text-lg font-medium">Brak dostępnych zakładów dla tego sportu</p>
-                    <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
+                    <p className="text-lg font-medium">{t('Brak dostępnych zakładów dla tego sportu')}</p>
+                    <p className="text-sm mt-1">{t('Wybierz inny sport lub sprawdź ponownie później.')}</p>
                   </div>
                 ) : (
                   paginatedMatches.map((match) => (
@@ -287,8 +288,8 @@ export function HomePage() {
               ) : betCategory === 'score' ? (
                 scoreBets.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
-                    <p className="text-lg font-medium">Brak dostępnych zakładów dokładnego wyniku dla tego sportu</p>
-                    <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
+                    <p className="text-lg font-medium">{t('Brak dostępnych zakładów dokładnego wyniku dla tego sportu')}</p>
+                    <p className="text-sm mt-1">{t('Wybierz inny sport lub sprawdź ponownie później.')}</p>
                   </div>
                 ) : (
                   paginatedScoreBets.map((bet) => (
@@ -298,8 +299,8 @@ export function HomePage() {
               ) : (
                 predictionBets.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground bg-card rounded-lg border border-border p-6 shadow-md">
-                    <p className="text-lg font-medium">Brak dostępnych prediction</p>
-                    <p className="text-sm mt-1">Sprawdź ponownie później.</p>
+                    <p className="text-lg font-medium">{t('Brak dostępnych prediction')}</p>
+                    <p className="text-sm mt-1">{t('Sprawdź ponownie później.')}</p>
                   </div>
                 ) : (
                   paginatedPredictionBets.map((bet) => (
@@ -318,10 +319,10 @@ export function HomePage() {
                   disabled={currentPage === 0}
                   className="px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Poprzednia
+                  {t('Poprzednia')}
                 </button>
                 <span className="text-sm text-muted-foreground font-semibold">
-                  Strona {currentPage + 1} z {totalPages}
+                  {t('Strona')} {currentPage + 1} {t('z')} {totalPages}
                 </span>
                 <button
                   type="button"
@@ -329,7 +330,7 @@ export function HomePage() {
                   disabled={currentPage === totalPages - 1}
                   className="px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Następna
+                  {t('Następna')}
                 </button>
               </div>
             )}

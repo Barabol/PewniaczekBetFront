@@ -5,6 +5,7 @@ import { Radio } from 'lucide-react';
 import { useBetting } from '../context';
 import { useState, useEffect } from 'react';
 import { betService } from '../services';
+import { t } from '../utils/translator';
 import type { WinBetDto, ScoreBetDto } from '../types';
 
 function mapToMatch(bet: WinBetDto | ScoreBetDto) {
@@ -45,9 +46,9 @@ export function LivePage() {
           <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <Radio className="w-6 h-6 animate-pulse" />
-              <h2>Zakłady Live</h2>
+              <h2>{t('Zakłady Live')}</h2>
             </div>
-            <p className="text-sm opacity-90">Obstawiaj mecze na żywo z dynamicznie zmieniającymi się kursami!</p>
+            <p className="text-sm opacity-90">{t('Obstawiaj mecze na żywo z dynamicznie zmieniającymi się kursami!')}</p>
           </div>
 
           <div className="grid gap-4">
