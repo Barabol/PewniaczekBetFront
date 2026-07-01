@@ -13,7 +13,7 @@ const formatLocalDateTime = (dateStr: string) => {
 };
 
 export function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'create-bet' | 'create-prediction' | 'resolve' | 'update-score' | 'list' | 'logs'>('list');
+  const [activeTab, setActiveTab] = useState<'create-bet' | 'create-prediction' | 'create-sport' | 'resolve' | 'update-score' | 'list' | 'logs'>('list');
   const [loading, setLoading] = useState(false);
 
   const { user } = useAuth();
@@ -46,7 +46,9 @@ export function AdminPage() {
   const [gameStartDate, setGameStartDate] = useState('');
   const [team1, setTeam1] = useState('');
   const [team2, setTeam2] = useState('');
-  const [sport, setSport] = useState('Piłka nożna');
+  const [sport, setSport] = useState('piłka nożna');
+  const [availableSports, setAvailableSports] = useState<string[]>(['piłka nożna', 'koszykówka', 'siatkówka', 'piłka ręczna', 'tenis', 'ping-pong']);
+  const [newSportName, setNewSportName] = useState('');
   const [team1Score, setTeam1Score] = useState('0');
   const [team2Score, setTeam2Score] = useState('0');
 
@@ -105,8 +107,21 @@ export function AdminPage() {
     }
   };
 
+  const fetchSports = async () => {
+    try {
+      const res = await betService.getWinSports();
+      const sportNames = res.map((s) => s.sportName.toLowerCase());
+      const defaultSports = ['piłka nożna', 'koszykówka', 'siatkówka', 'piłka ręczna', 'tenis', 'ping-pong'];
+      const combined = Array.from(new Set([...defaultSports, ...sportNames]));
+      setAvailableSports(combined);
+    } catch {
+      // Keep defaults on failure
+    }
+  };
+
   useEffect(() => {
     fetchAllBets();
+    fetchSports();
   }, []);
 
   useEffect(() => {
@@ -215,6 +230,28 @@ export function AdminPage() {
     }
   };
 
+  const handleAddSport = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newSportName.trim().toLowerCase();
+    if (!trimmed) {
+      toast.error('Wpisz nazwę sportu');
+      return;
+    }
+    if (trimmed.length > 30) {
+      toast.error('Nazwa sportu nie może przekraczać 30 znaków');
+      return;
+    }
+    if (availableSports.includes(trimmed)) {
+      toast.error('Ten sport jest już na liście');
+      return;
+    }
+    setAvailableSports((prev) => [...prev, trimmed]);
+    setSport(trimmed);
+    toast.success(`Sport "${trimmed}" został dodany do listy wyboru`);
+    setNewSportName('');
+    setActiveTab('create-bet');
+  };
+
   const handleResolvePrediction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resolvePredId) {
@@ -271,7 +308,7 @@ export function AdminPage() {
     setGameStartDate('');
     setTeam1('');
     setTeam2('');
-    setSport('Piłka nożna');
+    setSport('piłka nożna');
     setTeam1Score('0');
     setTeam2Score('0');
   };
@@ -311,7 +348,7 @@ export function AdminPage() {
       setGameName(bet.game.name || '');
       setTeam1(bet.game.team1 || '');
       setTeam2(bet.game.team2 || '');
-      setSport(bet.game.sport || 'Piłka nożna');
+      setSport(bet.game.sport || 'piłka nożna');
       setTeam1Score(String(bet.game.team1Score || 0));
       setTeam2Score(String(bet.game.team2Score || 0));
 
@@ -432,6 +469,16 @@ export function AdminPage() {
           }`}
         >
           Rozstrzygnij Prediction
+        </button>
+        <button
+          onClick={() => setActiveTab('create-sport')}
+          className={`px-4 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer ${
+            activeTab === 'create-sport'
+              ? 'bg-green-600 text-white shadow-md shadow-green-600/10'
+              : 'bg-card border border-border text-foreground hover:bg-muted'
+          }`}
+        >
+          Dodaj Sport
         </button>
         {isActualAdmin && (
           <button
@@ -727,14 +774,18 @@ export function AdminPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Dyscyplina (Sport)</label>
-                    <input
-                      type="text"
+                    <select
                       value={sport}
                       onChange={(e) => setSport(e.target.value)}
-                      placeholder="np. Piłka nożna"
                       className="w-full p-2.5 rounded-lg border border-border bg-background text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
                       required
-                    />
+                    >
+                      {availableSports.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1.5">Nazwa meczu / turniej</label>
@@ -1090,6 +1141,39 @@ export function AdminPage() {
                 >
                   {loading && <RefreshCw className="w-4 h-4 animate-spin" />}
                   Rozstrzygnij i zakończ
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* 5B. CREATE SPORT TAB */}
+        {activeTab === 'create-sport' && (
+          <div className="bg-card rounded-lg border border-border shadow-md p-6">
+            <h3 className="text-lg font-bold mb-6 flex items-center gap-2 border-b border-border pb-3">
+              <Plus className="w-5 h-5 text-green-600" />
+              Dodaj Nową Dyscyplinę (Sport)
+            </h3>
+
+            <form onSubmit={handleAddSport} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Nazwa sportu</label>
+                <input
+                  type="text"
+                  value={newSportName}
+                  onChange={(e) => setNewSportName(e.target.value)}
+                  placeholder="np. hokej, formula 1, rzutki"
+                  className="w-full p-2.5 rounded-lg border border-border bg-background text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium shadow-md shadow-green-600/10 flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  Dodaj do listy i przejdź do zakładu
                 </button>
               </div>
             </form>

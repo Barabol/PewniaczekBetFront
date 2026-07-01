@@ -26,16 +26,21 @@ export function SocialBettingPanel() {
   const [groupedBets, setGroupedBets] = useState<GroupedBet[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user: currentUser } = useAuth();
 
   const fetchSocialBets = useCallback(async () => {
+    if (!isLoggedIn) {
+      setGroupedBets([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       let allBets: UserWinBetDto[] = [];
 
       if (filterMode === 'followed') {
         const followedPage = await userService.getFollowed(0, 20);
-        const followedUsers = followedPage.content;
+        const followedUsers = followedPage.content || [];
 
         if (followedUsers.length === 0) {
           setGroupedBets([]);
@@ -45,14 +50,31 @@ export function SocialBettingPanel() {
         const results = await Promise.all(
           followedUsers.map((u) =>
             betService.getWinHistory(0, 5, u.id, undefined, false)
-              .then((page) => page.content)
+              .then((page) => page.content || [])
               .catch(() => [] as UserWinBetDto[])
           )
         );
         allBets = results.flat();
       } else {
-        const data = await betService.getWinHistory(0, 10, undefined, undefined, false);
-        allBets = data.content;
+        // Fetch all users and filter out the current user to get actual bets of others
+        const usersPage = await userService.getAll(0, 50);
+        const otherUsers = (usersPage.content || [])
+          .filter((u) => String(u.id) !== currentUser?.id)
+          .slice(0, 10); // Limit to 10 users to prevent network request flooding
+
+        if (otherUsers.length === 0) {
+          setGroupedBets([]);
+          return;
+        }
+
+        const results = await Promise.all(
+          otherUsers.map((u) =>
+            betService.getWinHistory(0, 5, u.id, undefined, false)
+              .then((page) => page.content || [])
+              .catch(() => [] as UserWinBetDto[])
+          )
+        );
+        allBets = results.flat();
       }
 
       if (allBets.length === 0) {

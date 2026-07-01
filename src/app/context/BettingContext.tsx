@@ -7,7 +7,7 @@ type BetType = 'win' | 'score' | 'prediction';
 
 interface BettingContextType {
   bets: Bet[];
-  addBet: (team: string, odd: number, match: string, betId?: number, betType?: BetType) => void;
+  addBet: (team: string, odd: number, match: string, betId?: number, betType?: BetType, teamType?: 'home' | 'draw' | 'away') => void;
   removeBet: (id: string) => void;
   clearAllBets: () => void;
   totalOdds: number;
@@ -21,7 +21,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const [bets, setBets] = useState<Bet[]>([]);
   const { refreshUser } = useAuth();
 
-  const addBet = (team: string, odd: number, match: string, betId?: number, betType?: BetType) => {
+  const addBet = (team: string, odd: number, match: string, betId?: number, betType?: BetType, teamType?: 'home' | 'draw' | 'away') => {
     const newBet: Bet = {
       team,
       odd,
@@ -29,6 +29,7 @@ export function BettingProvider({ children }: { children: ReactNode }) {
       id: `${Date.now()}-${Math.random()}`,
       betId,
       isFreeBet: false,
+      teamType,
     };
 
     const existingBetIndex = bets.findIndex(bet => bet.match === match);
@@ -59,11 +60,17 @@ export function BettingProvider({ children }: { children: ReactNode }) {
   const placeBets = async (stake: number, isFreeBet = false) => {
     for (const bet of bets) {
       if (bet.betId) {
+        let teamVal: boolean | null = null;
+        if (bet.teamType === 'home') {
+          teamVal = false;
+        } else if (bet.teamType === 'away') {
+          teamVal = true;
+        }
         await betService.placeWinBet({
           betId: bet.betId,
           ammount: Math.round((stake / bets.length) * 100),
           isFreeBet,
-          team: bet.team === 'home',
+          team: teamVal,
         });
       }
     }

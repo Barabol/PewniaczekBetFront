@@ -30,8 +30,8 @@ function mapWinBetToMatch(bet: WinBetDto) {
         }),
     odds: {
       home: bet.currentMultiplier || 2.0,
-      draw: 3.0,
-      away: 2.0,
+      draw: bet.currentMultiplier || 2.0,
+      away: bet.currentMultiplier || 2.0,
     },
     isLive,
     betId: bet.id,
@@ -47,6 +47,13 @@ export function HomePage() {
   const [selectedSport, setSelectedSport] = useState<string | undefined>(undefined);
   const [betCategory, setBetCategory] = useState<'win' | 'score' | 'prediction'>('win');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(0);
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [selectedSport, betCategory]);
 
   useEffect(() => {
     setLoading(true);
@@ -55,38 +62,44 @@ export function HomePage() {
         betService.getWinSports()
           .then((sportsList) => {
             const promises = (sportsList || []).map((s) =>
-              betService.getWinCurrent(s.sportName, 0, 10)
-                .then((page) => page?.content || [])
+              betService.getWinCurrent(s.sportName, currentPage, 10)
+                .then((page) => ({ content: page?.content || [], totalPages: page?.totalPages || 0 }))
                 .catch((err) => {
                   console.error(`[HOMEPAGE] Failed to load bets for sport ${s.sportName}:`, err);
-                  return [];
+                  return { content: [], totalPages: 0 };
                 })
             );
             return Promise.all(promises);
           })
           .then((results) => {
-            const allContent = results.flat();
+            const allContent = results.flatMap((r) => r.content);
+            const maxPages = Math.max(...results.map((r) => r.totalPages), 0);
             setMatches(allContent.map(mapWinBetToMatch));
+            setTotalPages(maxPages);
           })
           .catch((err) => {
             console.error('[HOMEPAGE] Failed to load all bets:', err);
             setMatches([]);
+            setTotalPages(0);
           })
           .finally(() => {
             setLoading(false);
           });
       } else {
-        betService.getWinCurrent(selectedSport, 0, 10)
+        betService.getWinCurrent(selectedSport, currentPage, 10)
           .then((page) => {
             if (page?.content) {
               setMatches(page.content.map(mapWinBetToMatch));
+              setTotalPages(page.totalPages || 0);
             } else {
               setMatches([]);
+              setTotalPages(0);
             }
           })
           .catch((err) => {
             console.error('[HOMEPAGE] Failed to load bets:', err);
             setMatches([]);
+            setTotalPages(0);
           })
           .finally(() => {
             setLoading(false);
@@ -97,52 +110,63 @@ export function HomePage() {
         betService.getScoreSports()
           .then((sportsList) => {
             const promises = (sportsList || []).map((s) =>
-              betService.getScoreCurrent(s.sportName, 0, 10)
-                .then((page) => page?.content || [])
+              betService.getScoreCurrent(s.sportName, currentPage, 10)
+                .then((page) => ({ content: page?.content || [], totalPages: page?.totalPages || 0 }))
                 .catch((err) => {
                   console.error(`[HOMEPAGE] Failed to load score bets for sport ${s.sportName}:`, err);
-                  return [];
+                  return { content: [], totalPages: 0 };
                 })
             );
             return Promise.all(promises);
           })
           .then((results) => {
-            setScoreBets(results.flat());
+            setScoreBets(results.flatMap((r) => r.content));
+            const maxPages = Math.max(...results.map((r) => r.totalPages), 0);
+            setTotalPages(maxPages);
           })
           .catch((err) => {
             console.error('[HOMEPAGE] Failed to load all score bets:', err);
             setScoreBets([]);
+            setTotalPages(0);
           })
           .finally(() => {
             setLoading(false);
           });
       } else {
-        betService.getScoreCurrent(selectedSport, 0, 10)
+        betService.getScoreCurrent(selectedSport, currentPage, 10)
           .then((page) => {
             setScoreBets(page?.content || []);
+            setTotalPages(page?.totalPages || 0);
           })
           .catch((err) => {
             console.error('[HOMEPAGE] Failed to load score bets:', err);
             setScoreBets([]);
+            setTotalPages(0);
           })
           .finally(() => {
             setLoading(false);
           });
       }
     } else if (betCategory === 'prediction') {
-      betService.getPredictionCurrent(0, 30)
+      betService.getPredictionCurrent(currentPage, 10)
         .then((page) => {
           setPredictionBets(page?.content || []);
+          setTotalPages(page?.totalPages || 0);
         })
         .catch((err) => {
           console.error('[HOMEPAGE] Failed to load prediction bets:', err);
           setPredictionBets([]);
+          setTotalPages(0);
         })
         .finally(() => {
           setLoading(false);
         });
     }
-  }, [selectedSport, betCategory]);
+  }, [selectedSport, betCategory, currentPage]);
+
+  const paginatedMatches = matches.slice(0, 10);
+  const paginatedScoreBets = scoreBets.slice(0, 10);
+  const paginatedPredictionBets = predictionBets.filter((bet) => bet.endedWith === null).slice(0, 10);
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -245,7 +269,7 @@ export function HomePage() {
                     <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
                   </div>
                 ) : (
-                  matches.map((match) => (
+                  paginatedMatches.map((match) => (
                     <MatchCard
                       key={match.id}
                       league={match.league}
@@ -267,7 +291,7 @@ export function HomePage() {
                     <p className="text-sm mt-1">Wybierz inny sport lub sprawdź ponownie później.</p>
                   </div>
                 ) : (
-                  scoreBets.map((bet) => (
+                  paginatedScoreBets.map((bet) => (
                     <ScoreMatchCard key={bet.id} bet={bet} />
                   ))
                 )
@@ -278,12 +302,37 @@ export function HomePage() {
                     <p className="text-sm mt-1">Sprawdź ponownie później.</p>
                   </div>
                 ) : (
-                  predictionBets.map((bet) => (
+                  paginatedPredictionBets.map((bet) => (
                     <PredictionCard key={bet.id} bet={bet} />
                   ))
                 )
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+              <div className="flex justify-between items-center mt-6 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Poprzednia
+                </button>
+                <span className="text-sm text-muted-foreground font-semibold">
+                  Strona {currentPage + 1} z {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1))}
+                  disabled={currentPage === totalPages - 1}
+                  className="px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted text-sm font-medium transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Następna
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

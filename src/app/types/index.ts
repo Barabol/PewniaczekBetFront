@@ -270,6 +270,7 @@ export interface Bet {
   id: string;
   betId?: number;
   isFreeBet?: boolean;
+  teamType?: 'home' | 'draw' | 'away';
 }
 
 export type BetType = 'WIN' | 'SCORE' | 'PREDICTION';

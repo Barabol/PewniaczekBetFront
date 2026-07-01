@@ -14,7 +14,7 @@ interface MatchCardProps {
   isLive?: boolean;
   betId?: number;
   betType?: 'win' | 'score' | 'prediction';
-  onAddToBet: (team: string, odd: number, match: string, betId?: number, betType?: 'win' | 'score' | 'prediction') => void;
+  onAddToBet: (team: string, odd: number, match: string, betId?: number, betType?: 'win' | 'score' | 'prediction', teamType?: 'home' | 'draw' | 'away') => void;
 }
 
 export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betId, betType, onAddToBet }: MatchCardProps) {
@@ -26,7 +26,7 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
     const matchName = `${homeTeam} vs ${awayTeam}`;
 
     setSelected(type);
-    onAddToBet(teamName, odd, matchName, betId, betType);
+    onAddToBet(teamName, odd, matchName, betId, betType, type);
   };
 
   return (

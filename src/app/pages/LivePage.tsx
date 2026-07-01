@@ -16,8 +16,8 @@ function mapToMatch(bet: WinBetDto | ScoreBetDto) {
     time: 'LIVE',
     odds: {
       home: bet.currentMultiplier || 2.0,
-      draw: 3.0,
-      away: 2.0,
+      draw: bet.currentMultiplier || 2.0,
+      away: bet.currentMultiplier || 2.0,
     },
     isLive: true,
     betId: bet.id,
