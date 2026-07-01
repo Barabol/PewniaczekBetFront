@@ -1,4 +1,4 @@
-import { Clock, TrendingUp } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useState } from 'react';
 
 interface MatchCardProps {
@@ -96,13 +96,6 @@ export function MatchCard({ league, homeTeam, awayTeam, time, odds, isLive, betI
             <div className="font-bold text-center">{odds.away.toFixed(2)}</div>
           </button>
         </div>
-      </div>
-
-      <div className="px-4 py-2 bg-muted border-t border-border">
-        <button className="text-sm text-green-600 hover:text-green-700 flex items-center gap-1">
-          <TrendingUp className="w-3 h-3" />
-          +127 więcej zakładów
-        </button>
       </div>
     </div>
   );
